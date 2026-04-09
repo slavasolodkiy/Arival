@@ -7,6 +7,7 @@ import paymentsRouter from "./payments";
 import notificationsRouter from "./notifications";
 import usersRouter from "./users";
 import onboardingRouter from "./onboarding";
+import catalogRouter from "./catalog";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(paymentsRouter);
 router.use(notificationsRouter);
 router.use(usersRouter);
 router.use(onboardingRouter);
+router.use(catalogRouter);
 
 export default router;

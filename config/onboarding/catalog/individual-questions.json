@@ -1,0 +1,193 @@
+{
+  "_schema": "nexvault/catalog/individual-questions/v1",
+  "_description": "Flat map of all individual onboarding questions with stable IDs. Every question must have a globally unique qid.",
+  "questions": {
+    "ind_account_type": {
+      "qid": "ind_account_type",
+      "stepId": "account_type",
+      "fieldId": "account_type",
+      "type": "radio",
+      "label": { "en": "What type of account do you need?", "de": "Welchen Kontotyp benötigen Sie?", "fr": "Quel type de compte souhaitez-vous?", "es": "¿Qué tipo de cuenta necesita?" },
+      "options": [
+        { "value": "individual", "label": { "en": "Personal Account", "de": "Privatkonto", "fr": "Compte personnel", "es": "Cuenta personal" } },
+        { "value": "business",   "label": { "en": "Business Account", "de": "Geschäftskonto", "fr": "Compte professionnel", "es": "Cuenta empresarial" } }
+      ],
+      "required": true
+    },
+    "ind_first_name": {
+      "qid": "ind_first_name",
+      "stepId": "personal_info",
+      "fieldId": "first_name",
+      "type": "text",
+      "label": { "en": "First Name", "de": "Vorname", "fr": "Prénom", "es": "Nombre" },
+      "required": true,
+      "maxLength": 100
+    },
+    "ind_last_name": {
+      "qid": "ind_last_name",
+      "stepId": "personal_info",
+      "fieldId": "last_name",
+      "type": "text",
+      "label": { "en": "Last Name", "de": "Nachname", "fr": "Nom de famille", "es": "Apellido" },
+      "required": true,
+      "maxLength": 100
+    },
+    "ind_date_of_birth": {
+      "qid": "ind_date_of_birth",
+      "stepId": "personal_info",
+      "fieldId": "date_of_birth",
+      "type": "date",
+      "label": { "en": "Date of Birth", "de": "Geburtsdatum", "fr": "Date de naissance", "es": "Fecha de nacimiento" },
+      "required": true,
+      "minAge": 18
+    },
+    "ind_nationality": {
+      "qid": "ind_nationality",
+      "stepId": "personal_info",
+      "fieldId": "nationality",
+      "type": "country_select",
+      "label": { "en": "Nationality", "de": "Staatsangehörigkeit", "fr": "Nationalité", "es": "Nacionalidad" },
+      "required": true
+    },
+    "ind_country_code": {
+      "qid": "ind_country_code",
+      "stepId": "country_of_residence",
+      "fieldId": "country_code",
+      "type": "country_select",
+      "label": { "en": "Country of Residence", "de": "Wohnsitzland", "fr": "Pays de résidence", "es": "País de residencia" },
+      "required": true,
+      "branchingKey": true
+    },
+    "ind_address_line_1": {
+      "qid": "ind_address_line_1",
+      "stepId": "country_of_residence",
+      "fieldId": "address_line_1",
+      "type": "text",
+      "label": { "en": "Address Line 1", "de": "Adresszeile 1", "fr": "Adresse ligne 1", "es": "Dirección línea 1" },
+      "required": true
+    },
+    "ind_city": {
+      "qid": "ind_city",
+      "stepId": "country_of_residence",
+      "fieldId": "city",
+      "type": "text",
+      "label": { "en": "City", "de": "Stadt", "fr": "Ville", "es": "Ciudad" },
+      "required": true
+    },
+    "ind_postcode": {
+      "qid": "ind_postcode",
+      "stepId": "country_of_residence",
+      "fieldId": "postcode",
+      "type": "text",
+      "label": { "en": "Postcode / ZIP", "de": "Postleitzahl", "fr": "Code postal", "es": "Código postal" },
+      "required": true
+    },
+    "ind_tax_id_fatca": {
+      "qid": "ind_tax_id_fatca",
+      "stepId": "tax_info_fatca",
+      "fieldId": "tax_id_number",
+      "type": "text",
+      "label": { "en": "Tax Identification Number (TIN/SSN/EIN)", "de": "Steueridentifikationsnummer", "fr": "Numéro d'identification fiscale", "es": "Número de identificación fiscal" },
+      "required": true
+    },
+    "ind_us_person_confirmation": {
+      "qid": "ind_us_person_confirmation",
+      "stepId": "tax_info_fatca",
+      "fieldId": "us_person_confirmation",
+      "type": "checkbox",
+      "label": { "en": "I confirm I am a US person for FATCA purposes", "de": "Ich bestätige, dass ich eine US-Person im Sinne von FATCA bin", "fr": "Je confirme être une personne américaine au sens de FATCA", "es": "Confirmo que soy una persona estadounidense a efectos de FATCA" },
+      "required": true
+    },
+    "ind_tax_country_general": {
+      "qid": "ind_tax_country_general",
+      "stepId": "tax_info_general",
+      "fieldId": "tax_country",
+      "type": "country_select",
+      "label": { "en": "Country of Tax Residency", "de": "Land der steuerlichen Ansässigkeit", "fr": "Pays de résidence fiscale", "es": "País de residencia fiscal" },
+      "required": true
+    },
+    "ind_tax_id_general": {
+      "qid": "ind_tax_id_general",
+      "stepId": "tax_info_general",
+      "fieldId": "tax_id_number",
+      "type": "text",
+      "label": { "en": "Tax Identification Number (optional)", "de": "Steueridentifikationsnummer (optional)", "fr": "Numéro d'identification fiscale (facultatif)", "es": "Número de identificación fiscal (opcional)" },
+      "required": false
+    },
+    "ind_document_type": {
+      "qid": "ind_document_type",
+      "stepId": "document_type",
+      "fieldId": "document_type",
+      "type": "radio",
+      "label": { "en": "Which document will you use to verify your identity?", "de": "Welches Dokument verwenden Sie zur Identitätsprüfung?", "fr": "Quel document utiliserez-vous pour vérifier votre identité?", "es": "¿Qué documento usará para verificar su identidad?" },
+      "options": [
+        { "value": "passport",       "label": { "en": "Passport",        "de": "Reisepass",      "fr": "Passeport",   "es": "Pasaporte" } },
+        { "value": "national_id",    "label": { "en": "National ID Card", "de": "Personalausweis","fr": "Carte nationale d'identité", "es": "DNI" } },
+        { "value": "driving_licence","label": { "en": "Driving Licence",  "de": "Führerschein",   "fr": "Permis de conduire", "es": "Carnet de conducir" } }
+      ],
+      "required": true,
+      "branchingKey": true,
+      "countryRestrictedOptions": {
+        "IN": ["passport"],
+        "AE": ["passport"],
+        "US": ["passport", "driving_licence"],
+        "CA": ["passport", "driving_licence"]
+      }
+    },
+    "ind_source_of_funds": {
+      "qid": "ind_source_of_funds",
+      "stepId": "funding_source",
+      "fieldId": "source",
+      "type": "radio",
+      "label": { "en": "Primary source of funds", "de": "Hauptherkunft der Mittel", "fr": "Source principale des fonds", "es": "Fuente principal de fondos" },
+      "options": [
+        { "value": "employment",  "label": { "en": "Employment / Salary", "de": "Beschäftigung / Gehalt", "fr": "Emploi / Salaire", "es": "Empleo / Salario" } },
+        { "value": "business",    "label": { "en": "Business Income",     "de": "Geschäftseinkommen",    "fr": "Revenu d'entreprise", "es": "Ingresos empresariales" } },
+        { "value": "investment",  "label": { "en": "Investments",         "de": "Investitionen",         "fr": "Investissements", "es": "Inversiones" } },
+        { "value": "savings",     "label": { "en": "Savings",             "de": "Ersparnisse",           "fr": "Épargne", "es": "Ahorros" } },
+        { "value": "inheritance", "label": { "en": "Inheritance",         "de": "Erbschaft",             "fr": "Héritage", "es": "Herencia" } },
+        { "value": "other",       "label": { "en": "Other",               "de": "Sonstiges",             "fr": "Autre", "es": "Otro" } }
+      ],
+      "required": true
+    },
+    "ind_monthly_income_range": {
+      "qid": "ind_monthly_income_range",
+      "stepId": "funding_source",
+      "fieldId": "monthly_income_range",
+      "type": "select",
+      "label": { "en": "Estimated monthly income", "de": "Geschätztes monatliches Einkommen", "fr": "Revenu mensuel estimé", "es": "Ingresos mensuales estimados" },
+      "options": [
+        { "value": "lt_1000",     "label": { "en": "Less than $1,000" } },
+        { "value": "1000_5000",   "label": { "en": "$1,000 - $5,000" } },
+        { "value": "5000_15000",  "label": { "en": "$5,000 - $15,000" } },
+        { "value": "15000_50000", "label": { "en": "$15,000 - $50,000" } },
+        { "value": "gt_50000",    "label": { "en": "More than $50,000" } }
+      ],
+      "required": true
+    },
+    "ind_terms_accepted": {
+      "qid": "ind_terms_accepted",
+      "stepId": "terms_acceptance",
+      "fieldId": "terms_accepted",
+      "type": "checkbox",
+      "label": { "en": "I agree to the Terms & Conditions and Account Agreement", "de": "Ich stimme den AGB und der Kontovereinbarung zu", "fr": "J'accepte les Conditions Générales et l'accord de compte", "es": "Acepto los Términos y Condiciones y el Acuerdo de cuenta" },
+      "required": true
+    },
+    "ind_privacy_accepted": {
+      "qid": "ind_privacy_accepted",
+      "stepId": "terms_acceptance",
+      "fieldId": "privacy_accepted",
+      "type": "checkbox",
+      "label": { "en": "I have read and understood the Privacy Policy", "de": "Ich habe die Datenschutzrichtlinie gelesen und verstanden", "fr": "J'ai lu et compris la Politique de confidentialité", "es": "He leído y entendido la Política de privacidad" },
+      "required": true
+    },
+    "ind_marketing_consent": {
+      "qid": "ind_marketing_consent",
+      "stepId": "terms_acceptance",
+      "fieldId": "marketing_consent",
+      "type": "checkbox",
+      "label": { "en": "I agree to receive marketing communications (optional)", "de": "Ich stimme dem Erhalt von Marketingmitteilungen zu (optional)", "fr": "J'accepte de recevoir des communications marketing (facultatif)", "es": "Acepto recibir comunicaciones de marketing (opcional)" },
+      "required": false
+    }
+  }
+}

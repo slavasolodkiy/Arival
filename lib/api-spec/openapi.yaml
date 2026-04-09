@@ -215,6 +215,68 @@ paths:
               schema:
                 $ref: "#/components/schemas/OnboardingStatus"
 
+  /onboarding/catalog:
+    get:
+      operationId: getOnboardingCatalog
+      summary: Get onboarding catalog for a country/flow/language
+      tags: [onboarding]
+      parameters:
+        - in: query
+          name: flowType
+          schema:
+            type: string
+            enum: [individual, business]
+            default: individual
+        - in: query
+          name: country
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 2
+            default: GB
+        - in: query
+          name: language
+          schema:
+            type: string
+            enum: [en, de, fr, es]
+            default: en
+      responses:
+        "200":
+          description: Onboarding catalog
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingCatalogResponse"
+        "400":
+          description: Invalid query parameters
+        "404":
+          description: Country not found
+        "422":
+          description: Country not available
+
+  /onboarding/preview:
+    post:
+      operationId: previewOnboardingStep
+      summary: Preview next onboarding step given answers so far
+      tags: [onboarding]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingPreviewRequest"
+      responses:
+        "200":
+          description: Next step with branch reason
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingPreviewResponse"
+        "400":
+          description: Invalid request body
+        "404":
+          description: Country not found
+
   # Accounts
   /accounts:
     get:
@@ -1159,3 +1221,122 @@ components:
         timestamp:
           type: string
           format: date-time
+
+    OnboardingCatalogResponse:
+      type: object
+      required: [flowType, country, language, languageFallback, countryInfo, supportedLanguages, availableDocuments, steps, branchRules]
+      properties:
+        flowType:
+          type: string
+          enum: [individual, business]
+        country:
+          type: string
+        language:
+          type: string
+        languageFallback:
+          type: boolean
+        countryInfo:
+          type: object
+          required: [code, name, riskTier, available, requiresFatca]
+          properties:
+            code: { type: string }
+            name: { type: string }
+            riskTier: { type: string, enum: [low, medium, high] }
+            available: { type: boolean }
+            requiresFatca: { type: boolean }
+            region: { type: string }
+        supportedLanguages:
+          type: array
+          items: { type: string }
+        availableDocuments:
+          type: array
+          items: { type: string }
+        steps:
+          type: array
+          items:
+            type: object
+            required: [id, title, type, required]
+            properties:
+              id: { type: string }
+              title: { type: string }
+              type: { type: string }
+              required: { type: boolean }
+              description: { type: string }
+              fields:
+                type: array
+                items: { type: object, additionalProperties: true }
+        branchRules:
+          type: array
+          items:
+            type: object
+            required: [ruleId, stepId, field, condition, nextStep, reason]
+            properties:
+              ruleId: { type: string }
+              stepId: { type: string }
+              field: { type: string }
+              condition: { type: string }
+              value: {}
+              nextStep: { type: string }
+              reason: { type: string }
+        linearSteps:
+          type: object
+          additionalProperties: { type: string }
+
+    OnboardingPreviewRequest:
+      type: object
+      required: [flowType, country]
+      properties:
+        flowType:
+          type: string
+          enum: [individual, business]
+        country:
+          type: string
+          minLength: 2
+          maxLength: 2
+        language:
+          type: string
+          enum: [en, de, fr, es]
+          default: en
+        answersSoFar:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties: { type: string }
+
+    OnboardingPreviewResponse:
+      type: object
+      required: [flowType, country, language, nextStepId, branchReason, completedSteps, missingRequirements, isComplete]
+      properties:
+        flowType:
+          type: string
+        country:
+          type: string
+        language:
+          type: string
+        nextStep:
+          type: object
+          nullable: true
+          properties:
+            id: { type: string }
+            title: { type: string }
+            type: { type: string }
+            fields:
+              type: array
+              items: { type: object, additionalProperties: true }
+        nextStepId:
+          type: string
+        allowedAnswers:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+        branchReason:
+          type: string
+        completedSteps:
+          type: array
+          items: { type: string }
+        missingRequirements:
+          type: array
+          items: { type: string }
+        isComplete:
+          type: boolean

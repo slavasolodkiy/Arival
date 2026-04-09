@@ -568,3 +568,82 @@ export const GetRecentActivityResponseItem = zod.object({
 export const GetRecentActivityResponse = zod.array(
   GetRecentActivityResponseItem,
 );
+
+/**
+ * @summary Onboarding catalog country info
+ */
+export const OnboardingCatalogCountryInfo = zod.object({
+  code: zod.string(),
+  name: zod.string(),
+  riskTier: zod.enum(["low", "medium", "high"]),
+  available: zod.boolean(),
+  requiresFatca: zod.boolean(),
+  region: zod.string().optional(),
+});
+
+/**
+ * @summary Onboarding catalog branch rule
+ */
+export const OnboardingCatalogBranchRule = zod.object({
+  ruleId: zod.string(),
+  stepId: zod.string(),
+  field: zod.string(),
+  condition: zod.string(),
+  value: zod.union([zod.string(), zod.array(zod.string())]).optional(),
+  nextStep: zod.string(),
+  reason: zod.string(),
+});
+
+/**
+ * @summary GET /onboarding/catalog response
+ */
+export const OnboardingCatalogResponse = zod.object({
+  flowType: zod.enum(["individual", "business"]),
+  country: zod.string(),
+  language: zod.string(),
+  languageFallback: zod.boolean(),
+  countryInfo: OnboardingCatalogCountryInfo,
+  supportedLanguages: zod.array(zod.string()),
+  availableDocuments: zod.array(zod.string()),
+  steps: zod.array(zod.object({
+    id: zod.string(),
+    title: zod.string(),
+    type: zod.string(),
+    required: zod.boolean(),
+    description: zod.string().optional(),
+    fields: zod.array(zod.record(zod.string(), zod.unknown())).optional(),
+  })),
+  branchRules: zod.array(OnboardingCatalogBranchRule),
+  linearSteps: zod.record(zod.string(), zod.string()).optional(),
+});
+
+/**
+ * @summary POST /onboarding/preview request
+ */
+export const OnboardingPreviewRequest = zod.object({
+  flowType: zod.enum(["individual", "business"]),
+  country: zod.string().length(2),
+  language: zod.enum(["en", "de", "fr", "es"]).optional().default("en"),
+  answersSoFar: zod.record(zod.string(), zod.record(zod.string(), zod.string())).optional().default({}),
+});
+
+/**
+ * @summary POST /onboarding/preview response
+ */
+export const OnboardingPreviewResponse = zod.object({
+  flowType: zod.string(),
+  country: zod.string(),
+  language: zod.string(),
+  nextStep: zod.object({
+    id: zod.string(),
+    title: zod.string(),
+    type: zod.string(),
+    fields: zod.array(zod.record(zod.string(), zod.unknown())).optional(),
+  }).nullable(),
+  nextStepId: zod.string(),
+  allowedAnswers: zod.record(zod.string(), zod.array(zod.string())),
+  branchReason: zod.string(),
+  completedSteps: zod.array(zod.string()),
+  missingRequirements: zod.array(zod.string()),
+  isComplete: zod.boolean(),
+});

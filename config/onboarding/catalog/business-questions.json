@@ -1,0 +1,202 @@
+{
+  "_schema": "nexvault/catalog/business-questions/v1",
+  "_description": "Flat map of all business onboarding questions with stable IDs.",
+  "questions": {
+    "biz_company_name": {
+      "qid": "biz_company_name",
+      "stepId": "business_info",
+      "fieldId": "company_name",
+      "type": "text",
+      "label": { "en": "Registered Company Name", "de": "Eingetragener Firmenname", "fr": "Raison sociale enregistrée", "es": "Nombre legal de la empresa" },
+      "required": true,
+      "maxLength": 255
+    },
+    "biz_company_type": {
+      "qid": "biz_company_type",
+      "stepId": "business_info",
+      "fieldId": "company_type",
+      "type": "select",
+      "label": { "en": "Company Type", "de": "Unternehmensform", "fr": "Forme juridique", "es": "Tipo de empresa" },
+      "options": [
+        { "value": "ltd",          "label": { "en": "Private Limited (Ltd)" } },
+        { "value": "llc",          "label": { "en": "Limited Liability Company (LLC)" } },
+        { "value": "plc",          "label": { "en": "Public Limited Company (PLC)" } },
+        { "value": "listed",       "label": { "en": "Listed Company" } },
+        { "value": "partnership",  "label": { "en": "Partnership" } },
+        { "value": "sole_trader",  "label": { "en": "Sole Trader" } },
+        { "value": "other",        "label": { "en": "Other" } }
+      ],
+      "required": true
+    },
+    "biz_registration_number": {
+      "qid": "biz_registration_number",
+      "stepId": "business_info",
+      "fieldId": "registration_number",
+      "type": "text",
+      "label": { "en": "Company Registration Number", "de": "Handelsregisternummer", "fr": "Numéro d'immatriculation", "es": "Número de registro mercantil" },
+      "required": true
+    },
+    "biz_country_of_incorporation": {
+      "qid": "biz_country_of_incorporation",
+      "stepId": "business_info",
+      "fieldId": "country_of_incorporation",
+      "type": "country_select",
+      "label": { "en": "Country of Incorporation", "de": "Gründungsland", "fr": "Pays de constitution", "es": "País de constitución" },
+      "required": true
+    },
+    "biz_industry_code": {
+      "qid": "biz_industry_code",
+      "stepId": "business_info",
+      "fieldId": "industry_code",
+      "type": "select",
+      "label": { "en": "Industry", "de": "Branche", "fr": "Secteur d'activité", "es": "Sector" },
+      "options": [
+        { "value": "technology",  "label": { "en": "Technology / Software" } },
+        { "value": "ecommerce",   "label": { "en": "E-Commerce / Retail" } },
+        { "value": "consulting",  "label": { "en": "Consulting / Professional Services" } },
+        { "value": "finance",     "label": { "en": "Finance / Investment" } },
+        { "value": "healthcare",  "label": { "en": "Healthcare" } },
+        { "value": "education",   "label": { "en": "Education" } },
+        { "value": "media",       "label": { "en": "Media / Entertainment" } },
+        { "value": "logistics",   "label": { "en": "Logistics / Supply Chain" } },
+        { "value": "real_estate", "label": { "en": "Real Estate" } },
+        { "value": "other",       "label": { "en": "Other" } }
+      ],
+      "required": true
+    },
+    "biz_description": {
+      "qid": "biz_description",
+      "stepId": "business_info",
+      "fieldId": "description_of_business",
+      "type": "textarea",
+      "label": { "en": "Brief description of your business", "de": "Kurze Beschreibung Ihres Unternehmens", "fr": "Brève description de votre activité", "es": "Breve descripción de su negocio" },
+      "required": true,
+      "maxLength": 500
+    },
+    "biz_address_line_1": {
+      "qid": "biz_address_line_1",
+      "stepId": "business_address",
+      "fieldId": "address_line_1",
+      "type": "text",
+      "label": { "en": "Address Line 1", "de": "Adresszeile 1", "fr": "Adresse ligne 1", "es": "Dirección línea 1" },
+      "required": true
+    },
+    "biz_city": {
+      "qid": "biz_city",
+      "stepId": "business_address",
+      "fieldId": "city",
+      "type": "text",
+      "label": { "en": "City", "de": "Stadt", "fr": "Ville", "es": "Ciudad" },
+      "required": true
+    },
+    "biz_postcode": {
+      "qid": "biz_postcode",
+      "stepId": "business_address",
+      "fieldId": "postcode",
+      "type": "text",
+      "label": { "en": "Postcode / ZIP", "de": "Postleitzahl", "fr": "Code postal", "es": "Código postal" },
+      "required": true
+    },
+    "biz_address_country": {
+      "qid": "biz_address_country",
+      "stepId": "business_address",
+      "fieldId": "country_code",
+      "type": "country_select",
+      "label": { "en": "Country", "de": "Land", "fr": "Pays", "es": "País" },
+      "required": true
+    },
+    "biz_director_first_name": {
+      "qid": "biz_director_first_name",
+      "stepId": "business_director",
+      "fieldId": "director_first_name",
+      "type": "text",
+      "label": { "en": "Director First Name", "de": "Vorname des Direktors", "fr": "Prénom du directeur", "es": "Nombre del director" },
+      "required": true
+    },
+    "biz_director_last_name": {
+      "qid": "biz_director_last_name",
+      "stepId": "business_director",
+      "fieldId": "director_last_name",
+      "type": "text",
+      "label": { "en": "Director Last Name", "de": "Nachname des Direktors", "fr": "Nom du directeur", "es": "Apellido del director" },
+      "required": true
+    },
+    "biz_director_dob": {
+      "qid": "biz_director_dob",
+      "stepId": "business_director",
+      "fieldId": "director_dob",
+      "type": "date",
+      "label": { "en": "Date of Birth", "de": "Geburtsdatum", "fr": "Date de naissance", "es": "Fecha de nacimiento" },
+      "required": true
+    },
+    "biz_ownership_percentage": {
+      "qid": "biz_ownership_percentage",
+      "stepId": "business_director",
+      "fieldId": "ownership_percentage",
+      "type": "number",
+      "label": { "en": "Ownership %", "de": "Eigentumsanteil %", "fr": "Pourcentage de détention %", "es": "Porcentaje de propiedad %" },
+      "required": true,
+      "min": 0,
+      "max": 100
+    },
+    "biz_has_additional_directors": {
+      "qid": "biz_has_additional_directors",
+      "stepId": "business_directors_additional",
+      "fieldId": "has_additional_directors",
+      "type": "radio",
+      "label": { "en": "Are there additional directors or beneficial owners with 25%+ ownership?", "de": "Gibt es weitere Direktoren oder wirtschaftliche Eigentümer mit 25%+ Anteil?", "fr": "Y a-t-il d'autres directeurs ou bénéficiaires effectifs avec 25%+ de participation?", "es": "¿Hay directores adicionales o beneficiarios reales con 25%+ de participación?" },
+      "options": [
+        { "value": "yes", "label": { "en": "Yes, add another", "de": "Ja, weiteren hinzufügen", "fr": "Oui, en ajouter un autre", "es": "Sí, agregar otro" } },
+        { "value": "no",  "label": { "en": "No, that's all",  "de": "Nein, das ist alles",  "fr": "Non, c'est tout",       "es": "No, eso es todo" } }
+      ],
+      "required": true,
+      "branchingKey": true
+    },
+    "biz_primary_revenue_source": {
+      "qid": "biz_primary_revenue_source",
+      "stepId": "funding_source_business",
+      "fieldId": "primary_revenue_source",
+      "type": "select",
+      "label": { "en": "Primary source of business revenue", "de": "Haupteinnahmequelle", "fr": "Source principale de revenus", "es": "Fuente principal de ingresos" },
+      "options": [
+        { "value": "product_sales",       "label": { "en": "Product Sales" } },
+        { "value": "service_fees",        "label": { "en": "Service Fees / Consulting" } },
+        { "value": "subscriptions",       "label": { "en": "Subscriptions / SaaS" } },
+        { "value": "investment_returns",  "label": { "en": "Investment Returns" } },
+        { "value": "grants",              "label": { "en": "Grants / Funding" } },
+        { "value": "other",               "label": { "en": "Other" } }
+      ],
+      "required": true
+    },
+    "biz_expected_monthly_volume": {
+      "qid": "biz_expected_monthly_volume",
+      "stepId": "funding_source_business",
+      "fieldId": "expected_monthly_volume",
+      "type": "select",
+      "label": { "en": "Expected monthly transaction volume", "de": "Erwartetes monatliches Transaktionsvolumen", "fr": "Volume mensuel prévu", "es": "Volumen mensual esperado" },
+      "options": [
+        { "value": "lt_10000",     "label": { "en": "Less than $10,000" } },
+        { "value": "10000_50000",  "label": { "en": "$10,000 - $50,000" } },
+        { "value": "50000_250000", "label": { "en": "$50,000 - $250,000" } },
+        { "value": "gt_250000",    "label": { "en": "More than $250,000" } }
+      ],
+      "required": true
+    },
+    "biz_terms_accepted": {
+      "qid": "biz_terms_accepted",
+      "stepId": "business_terms",
+      "fieldId": "terms_accepted",
+      "type": "checkbox",
+      "label": { "en": "I agree to the Terms & Conditions and Business Account Agreement", "de": "Ich stimme den AGB und der Geschäftskontovereinbarung zu", "fr": "J'accepte les CGU et l'accord de compte professionnel", "es": "Acepto los Términos y el Acuerdo de cuenta empresarial" },
+      "required": true
+    },
+    "biz_aml_policy_accepted": {
+      "qid": "biz_aml_policy_accepted",
+      "stepId": "business_terms",
+      "fieldId": "aml_policy_accepted",
+      "type": "checkbox",
+      "label": { "en": "I confirm the information provided is accurate and accept the AML/KYC Policy", "de": "Ich bestätige die Richtigkeit der Angaben und akzeptiere die AML/KYC-Richtlinie", "fr": "Je confirme l'exactitude des informations et accepte la politique AML/KYC", "es": "Confirmo la exactitud de la información y acepto la política AML/KYC" },
+      "required": true
+    }
+  }
+}

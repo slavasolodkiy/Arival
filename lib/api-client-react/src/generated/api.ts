@@ -59,6 +59,10 @@ import type {
   VerifyEmailResponse,
   VerifyOtpRequest,
   VerifyOtpResponse,
+  OnboardingCatalogResponse,
+  OnboardingPreviewRequest,
+  OnboardingPreviewResponse,
+  GetOnboardingCatalogParams,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -2657,4 +2661,140 @@ export function useGetRecentActivity<
   };
 
   return { ...query, queryKey: queryOptions.queryKey };
+}
+
+// ─── Onboarding Catalog ─────────────────────────────────────────────────────
+
+export const getGetOnboardingCatalogUrl = (params?: GetOnboardingCatalogParams) => {
+  const searchParams = new URLSearchParams();
+  if (params?.flowType) searchParams.set("flowType", params.flowType);
+  if (params?.country) searchParams.set("country", params.country);
+  if (params?.language) searchParams.set("language", params.language);
+  const qs = searchParams.toString();
+  return `/api/onboarding/catalog${qs ? `?${qs}` : ""}`;
+};
+
+export const getOnboardingCatalog = async (
+  params?: GetOnboardingCatalogParams,
+  options?: RequestInit,
+): Promise<OnboardingCatalogResponse> => {
+  return customFetch<OnboardingCatalogResponse>(getGetOnboardingCatalogUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetOnboardingCatalogQueryKey = (params?: GetOnboardingCatalogParams) => {
+  return [`/api/onboarding/catalog`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetOnboardingCatalogQueryOptions = <
+  TData = Awaited<ReturnType<typeof getOnboardingCatalog>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetOnboardingCatalogParams,
+  options?: {
+    query?: PartialQO<Awaited<ReturnType<typeof getOnboardingCatalog>>, TError, TData>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetOnboardingCatalogQueryKey(params);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getOnboardingCatalog>>> = ({ signal }) =>
+    getOnboardingCatalog(params, { signal, ...requestOptions });
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getOnboardingCatalog>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetOnboardingCatalogQueryResult = NonNullable<Awaited<ReturnType<typeof getOnboardingCatalog>>>;
+export type GetOnboardingCatalogQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get onboarding catalog for a country/flow/language
+ */
+export function useGetOnboardingCatalog<
+  TData = Awaited<ReturnType<typeof getOnboardingCatalog>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetOnboardingCatalogParams,
+  options?: {
+    query?: PartialQO<Awaited<ReturnType<typeof getOnboardingCatalog>>, TError, TData>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetOnboardingCatalogQueryOptions(params, options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+// ─── Onboarding Preview ──────────────────────────────────────────────────────
+
+export const getPreviewOnboardingStepUrl = () => `/api/onboarding/preview`;
+
+export const previewOnboardingStep = async (
+  body: OnboardingPreviewRequest,
+  options?: RequestInit,
+): Promise<OnboardingPreviewResponse> => {
+  return customFetch<OnboardingPreviewResponse>(getPreviewOnboardingStepUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(body),
+  });
+};
+
+export const getPreviewOnboardingStepMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof previewOnboardingStep>>,
+    TError,
+    { data: OnboardingPreviewRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { mutation: mutationOptions, request: requestOptions } = options ?? {};
+  const mutationFn = async (variables: { data: OnboardingPreviewRequest }) => {
+    const { data } = variables;
+    return previewOnboardingStep(data, requestOptions);
+  };
+  return { mutationFn, ...mutationOptions } as UseMutationOptions<
+    Awaited<ReturnType<typeof previewOnboardingStep>>,
+    TError,
+    { data: OnboardingPreviewRequest },
+    TContext
+  >;
+};
+
+export type PreviewOnboardingStepMutationResult = NonNullable<Awaited<ReturnType<typeof previewOnboardingStep>>>;
+export type PreviewOnboardingStepMutationBody = OnboardingPreviewRequest;
+export type PreviewOnboardingStepMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Preview next onboarding step given answers so far
+ */
+export function usePreviewOnboardingStep<
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof previewOnboardingStep>>,
+    TError,
+    { data: OnboardingPreviewRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof previewOnboardingStep>>,
+  TError,
+  { data: OnboardingPreviewRequest },
+  TContext
+> {
+  const mutationOptions = getPreviewOnboardingStepMutationOptions(options);
+  return useMutation(mutationOptions);
 }

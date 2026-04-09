@@ -1,0 +1,35 @@
+{
+  "_schema": "nexvault/catalog/countries/v1",
+  "_description": "Supported countries with risk tier, FATCA applicability, and availability flags.",
+  "countries": [
+    { "code": "GB", "name": "United Kingdom",   "riskTier": "low",    "available": true,  "requiresFatca": false, "region": "EEA" },
+    { "code": "DE", "name": "Germany",           "riskTier": "low",    "available": true,  "requiresFatca": false, "region": "EEA" },
+    { "code": "FR", "name": "France",            "riskTier": "low",    "available": true,  "requiresFatca": false, "region": "EEA" },
+    { "code": "ES", "name": "Spain",             "riskTier": "low",    "available": true,  "requiresFatca": false, "region": "EEA" },
+    { "code": "IT", "name": "Italy",             "riskTier": "low",    "available": true,  "requiresFatca": false, "region": "EEA" },
+    { "code": "NL", "name": "Netherlands",       "riskTier": "low",    "available": true,  "requiresFatca": false, "region": "EEA" },
+    { "code": "SE", "name": "Sweden",            "riskTier": "low",    "available": true,  "requiresFatca": false, "region": "EEA" },
+    { "code": "PL", "name": "Poland",            "riskTier": "low",    "available": true,  "requiresFatca": false, "region": "EEA" },
+    { "code": "CH", "name": "Switzerland",       "riskTier": "low",    "available": true,  "requiresFatca": false, "region": "Europe" },
+    { "code": "NO", "name": "Norway",            "riskTier": "low",    "available": true,  "requiresFatca": false, "region": "EEA" },
+    { "code": "SG", "name": "Singapore",         "riskTier": "low",    "available": true,  "requiresFatca": false, "region": "APAC" },
+    { "code": "HK", "name": "Hong Kong",         "riskTier": "medium", "available": true,  "requiresFatca": false, "region": "APAC" },
+    { "code": "AU", "name": "Australia",         "riskTier": "low",    "available": true,  "requiresFatca": false, "region": "APAC" },
+    { "code": "NZ", "name": "New Zealand",       "riskTier": "low",    "available": true,  "requiresFatca": false, "region": "APAC" },
+    { "code": "IN", "name": "India",             "riskTier": "medium", "available": true,  "requiresFatca": false, "region": "APAC" },
+    { "code": "AE", "name": "UAE",               "riskTier": "medium", "available": true,  "requiresFatca": false, "region": "MEA" },
+    { "code": "SA", "name": "Saudi Arabia",      "riskTier": "medium", "available": false, "requiresFatca": false, "region": "MEA" },
+    { "code": "US", "name": "United States",     "riskTier": "medium", "available": true,  "requiresFatca": true,  "region": "Americas" },
+    { "code": "CA", "name": "Canada",            "riskTier": "low",    "available": true,  "requiresFatca": true,  "region": "Americas" },
+    { "code": "BR", "name": "Brazil",            "riskTier": "high",   "available": false, "requiresFatca": false, "region": "Americas" },
+    { "code": "ZA", "name": "South Africa",      "riskTier": "medium", "available": true,  "requiresFatca": false, "region": "MEA" },
+    { "code": "NG", "name": "Nigeria",           "riskTier": "high",   "available": false, "requiresFatca": false, "region": "MEA" },
+    { "code": "KE", "name": "Kenya",             "riskTier": "high",   "available": false, "requiresFatca": false, "region": "MEA" },
+    { "code": "JP", "name": "Japan",             "riskTier": "low",    "available": true,  "requiresFatca": false, "region": "APAC" }
+  ],
+  "riskTierDefinitions": {
+    "low":    "Standard due diligence; most applications auto-approved in demo.",
+    "medium": "Enhanced due diligence; may require manual review in production.",
+    "high":   "Not currently accepting applications. Contact compliance."
+  }
+}

@@ -522,3 +522,77 @@ export type GetTransfersParams = {
 export type GetNotificationsParams = {
   unread_only?: boolean;
 };
+
+export type OnboardingCatalogCountryInfo = {
+  code: string;
+  name: string;
+  riskTier: "low" | "medium" | "high";
+  available: boolean;
+  requiresFatca: boolean;
+  region?: string;
+};
+
+export type OnboardingCatalogStep = {
+  id: string;
+  title: string;
+  type: string;
+  required: boolean;
+  description?: string;
+  fields?: Record<string, unknown>[];
+};
+
+export type OnboardingCatalogBranchRule = {
+  ruleId: string;
+  stepId: string;
+  field: string;
+  condition: string;
+  value?: string | string[];
+  nextStep: string;
+  reason: string;
+};
+
+export type OnboardingCatalogResponse = {
+  flowType: "individual" | "business";
+  country: string;
+  language: string;
+  languageFallback: boolean;
+  countryInfo: OnboardingCatalogCountryInfo;
+  supportedLanguages: string[];
+  availableDocuments: string[];
+  steps: OnboardingCatalogStep[];
+  branchRules: OnboardingCatalogBranchRule[];
+  linearSteps?: Record<string, string>;
+};
+
+export type OnboardingPreviewRequest = {
+  flowType: "individual" | "business";
+  country: string;
+  language?: "en" | "de" | "fr" | "es";
+  answersSoFar?: Record<string, Record<string, string>>;
+};
+
+export type OnboardingPreviewNextStep = {
+  id: string;
+  title: string;
+  type: string;
+  fields?: Record<string, unknown>[];
+} | null;
+
+export type OnboardingPreviewResponse = {
+  flowType: string;
+  country: string;
+  language: string;
+  nextStep: OnboardingPreviewNextStep;
+  nextStepId: string;
+  allowedAnswers: Record<string, string[]>;
+  branchReason: string;
+  completedSteps: string[];
+  missingRequirements: string[];
+  isComplete: boolean;
+};
+
+export type GetOnboardingCatalogParams = {
+  flowType?: "individual" | "business";
+  country?: string;
+  language?: "en" | "de" | "fr" | "es";
+};

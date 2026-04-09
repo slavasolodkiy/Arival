@@ -1,0 +1,33 @@
+{
+  "_schema": "nexvault/catalog/identity-documents/v1",
+  "_description": "Accepted identity documents by country. Entries not listed fall back to 'default'. Source: individual-flow.json countryRestrictions + compliance rules.",
+  "documentTypes": {
+    "passport":          { "id": "passport",          "label": "Passport",         "sides": 1, "notes": "Full bio/photo page required." },
+    "national_id":       { "id": "national_id",       "label": "National ID Card", "sides": 2, "notes": "Front and back required." },
+    "driving_licence":   { "id": "driving_licence",   "label": "Driving Licence",  "sides": 2, "notes": "Front and back required." },
+    "residence_permit":  { "id": "residence_permit",  "label": "Residence Permit", "sides": 2, "notes": "Front and back required." }
+  },
+  "byCountry": {
+    "default": ["passport", "national_id", "driving_licence"],
+    "GB":      ["passport", "national_id", "driving_licence", "residence_permit"],
+    "DE":      ["passport", "national_id", "residence_permit"],
+    "FR":      ["passport", "national_id", "residence_permit"],
+    "ES":      ["passport", "national_id", "residence_permit"],
+    "IT":      ["passport", "national_id", "residence_permit"],
+    "NL":      ["passport", "national_id", "residence_permit"],
+    "SE":      ["passport", "national_id", "residence_permit"],
+    "PL":      ["passport", "national_id", "residence_permit"],
+    "CH":      ["passport", "national_id", "residence_permit"],
+    "NO":      ["passport", "national_id", "residence_permit"],
+    "US":      ["passport", "driving_licence"],
+    "CA":      ["passport", "driving_licence"],
+    "AU":      ["passport", "driving_licence"],
+    "NZ":      ["passport", "driving_licence"],
+    "SG":      ["passport", "national_id"],
+    "HK":      ["passport", "national_id"],
+    "JP":      ["passport", "national_id"],
+    "ZA":      ["passport", "national_id"],
+    "IN":      ["passport"],
+    "AE":      ["passport"]
+  }
+}

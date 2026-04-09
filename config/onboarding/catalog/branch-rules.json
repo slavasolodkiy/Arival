@@ -1,0 +1,110 @@
+{
+  "_schema": "nexvault/catalog/branch-rules/v1",
+  "_description": "Deterministic branching rules for onboarding flows. Each rule is evaluated in order; first match wins. '_default' matches anything not matched by earlier rules.",
+  "individual": [
+    {
+      "ruleId": "ind_br_001",
+      "stepId": "account_type",
+      "field": "account_type",
+      "condition": "eq",
+      "value": "business",
+      "nextStep": "REDIRECT_BUSINESS_FLOW",
+      "reason": "User selected business account — redirect to business onboarding flow."
+    },
+    {
+      "ruleId": "ind_br_002",
+      "stepId": "account_type",
+      "field": "account_type",
+      "condition": "eq",
+      "value": "individual",
+      "nextStep": "personal_info",
+      "reason": "User selected personal account — proceed to personal info."
+    },
+    {
+      "ruleId": "ind_br_003",
+      "stepId": "country_of_residence",
+      "field": "country_code",
+      "condition": "in",
+      "value": ["US", "CA"],
+      "nextStep": "tax_info_fatca",
+      "reason": "US and Canadian residents are subject to FATCA — additional tax info required."
+    },
+    {
+      "ruleId": "ind_br_004",
+      "stepId": "country_of_residence",
+      "field": "country_code",
+      "condition": "_default",
+      "nextStep": "tax_info_general",
+      "reason": "Non-US/CA residents use standard tax residency form."
+    },
+    {
+      "ruleId": "ind_br_005",
+      "stepId": "document_type",
+      "field": "document_type",
+      "condition": "eq",
+      "value": "passport",
+      "nextStep": "document_upload_passport",
+      "reason": "Passport selected — show single-side upload."
+    },
+    {
+      "ruleId": "ind_br_006",
+      "stepId": "document_type",
+      "field": "document_type",
+      "condition": "eq",
+      "value": "national_id",
+      "nextStep": "document_upload_national_id",
+      "reason": "National ID selected — show double-side upload."
+    },
+    {
+      "ruleId": "ind_br_007",
+      "stepId": "document_type",
+      "field": "document_type",
+      "condition": "eq",
+      "value": "driving_licence",
+      "nextStep": "document_upload_dl",
+      "reason": "Driving licence selected — show double-side upload."
+    }
+  ],
+  "business": [
+    {
+      "ruleId": "biz_br_001",
+      "stepId": "business_directors_additional",
+      "field": "has_additional_directors",
+      "condition": "eq",
+      "value": "yes",
+      "nextStep": "business_director",
+      "reason": "Additional directors exist — loop back to director entry form."
+    },
+    {
+      "ruleId": "biz_br_002",
+      "stepId": "business_directors_additional",
+      "field": "has_additional_directors",
+      "condition": "eq",
+      "value": "no",
+      "nextStep": "business_documents",
+      "reason": "All directors entered — proceed to document upload."
+    }
+  ],
+  "linearSteps": {
+    "individual": {
+      "tax_info_fatca":              "document_type",
+      "tax_info_general":            "document_type",
+      "document_upload_passport":    "proof_of_address",
+      "document_upload_national_id": "proof_of_address",
+      "document_upload_dl":          "proof_of_address",
+      "proof_of_address":            "selfie_check",
+      "selfie_check":                "funding_source",
+      "funding_source":              "terms_acceptance",
+      "terms_acceptance":            "SUBMIT_KYC"
+    },
+    "business": {
+      "business_info":               "business_address",
+      "business_address":            "business_director",
+      "business_director":           "business_directors_additional",
+      "business_documents":          "authorized_signatory",
+      "authorized_signatory":        "funding_source_business",
+      "funding_source_business":     "business_terms",
+      "business_terms":              "SUBMIT_KYC"
+    }
+  }
+}
