@@ -1,6 +1,0 @@
-# GitHub Actions intentionally not used in this repo.
-# Use `pnpm run verify:local` before pushing.
-name: CI (disabled)
-on:
-  workflow_dispatch:
-jobs: {}
