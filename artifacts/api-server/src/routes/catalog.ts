@@ -284,6 +284,15 @@ router.post("/onboarding/preview", (req: Request, res: Response) => {
     return;
   }
 
+  if (!countryInfo.available) {
+    res.status(422).json({
+      error: `Country '${country}' (${countryInfo.name}) is not currently available for onboarding.`,
+      riskTier: countryInfo.riskTier,
+      requiresFatca: countryInfo.requiresFatca,
+    });
+    return;
+  }
+
   const supportedLanguages = getSupportedLanguages(country);
   const resolvedLanguage = supportedLanguages.includes(language) ? language : languagesData.fallback;
 

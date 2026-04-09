@@ -412,3 +412,40 @@ describe("POST /api/onboarding/preview — business flow", () => {
     expect(res.body.branchReason).toMatch(/All directors/i);
   });
 });
+
+describe("POST /api/onboarding/preview — unavailable country parity", () => {
+  it("rejects an unavailable country with 422 + risk context (SA — Saudi Arabia)", async () => {
+    const res = await request(app)
+      .post("/api/onboarding/preview")
+      .send({ flowType: "individual", country: "SA", answersSoFar: {} });
+    expect(res.status).toBe(422);
+    expect(res.body).toMatchObject({
+      error: expect.stringContaining("not currently available"),
+      riskTier: "medium",
+    });
+  });
+
+  it("rejects BR (Brazil, high-risk) with 422 + riskTier=high", async () => {
+    const res = await request(app)
+      .post("/api/onboarding/preview")
+      .send({ flowType: "individual", country: "BR", answersSoFar: {} });
+    expect(res.status).toBe(422);
+    expect(res.body.riskTier).toBe("high");
+  });
+
+  it("rejects NG (Nigeria) for business flow with 422", async () => {
+    const res = await request(app)
+      .post("/api/onboarding/preview")
+      .send({ flowType: "business", country: "NG", answersSoFar: {} });
+    expect(res.status).toBe(422);
+    expect(res.body.error).toMatch(/not currently available/);
+  });
+
+  it("allows available country (GB) through preview — returns 200", async () => {
+    const res = await request(app)
+      .post("/api/onboarding/preview")
+      .send({ flowType: "individual", country: "GB", answersSoFar: {} });
+    expect(res.status).toBe(200);
+    expect(res.body.isComplete).toBe(false);
+  });
+});
