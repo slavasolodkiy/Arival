@@ -2,21 +2,35 @@ openapi: 3.1.0
 info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
-  version: 0.1.0
-  description: API specification
+  version: 1.0.0
+  description: Nexvault — Digital Banking Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: onboarding
+    description: KYC onboarding flow
+  - name: accounts
+    description: Bank accounts
+  - name: cards
+    description: Debit cards
+  - name: payments
+    description: Transfers and payments
+  - name: notifications
+    description: User notifications
+  - name: users
+    description: User profile
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +38,538 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # Auth
+  /auth/register:
+    post:
+      operationId: register
+      summary: Register a new user
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Registration started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegisterResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      summary: Login
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+
+  /auth/verify-email:
+    post:
+      operationId: verifyEmail
+      summary: Verify email OTP
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyOtpRequest"
+      responses:
+        "200":
+          description: Email verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyEmailResponse"
+
+  /auth/refresh:
+    post:
+      operationId: refreshToken
+      summary: Refresh access token
+      tags: [auth]
+      responses:
+        "200":
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefreshTokenResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      summary: Logout
+      tags: [auth]
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/otp/request:
+    post:
+      operationId: requestOtp
+      summary: Request step-up OTP
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestOtpRequest"
+      responses:
+        "200":
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # Onboarding
+  /onboarding/start:
+    post:
+      operationId: startOnboarding
+      summary: Start onboarding flow
+      tags: [onboarding]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartOnboardingRequest"
+      responses:
+        "200":
+          description: Onboarding started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingFlowResponse"
+
+  /onboarding/step:
+    post:
+      operationId: submitOnboardingStep
+      summary: Submit onboarding step
+      tags: [onboarding]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingStepRequest"
+      responses:
+        "200":
+          description: Step submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingStepResponse"
+
+  /onboarding/status:
+    get:
+      operationId: getOnboardingStatus
+      summary: Get onboarding status
+      tags: [onboarding]
+      responses:
+        "200":
+          description: Onboarding status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingStatus"
+
+  # Accounts
+  /accounts:
+    get:
+      operationId: getAccounts
+      summary: List accounts
+      tags: [accounts]
+      responses:
+        "200":
+          description: Accounts list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Account"
+    post:
+      operationId: createAccount
+      summary: Create account
+      tags: [accounts]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAccountRequest"
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+
+  /accounts/summary:
+    get:
+      operationId: getAccountsSummary
+      summary: Dashboard summary
+      tags: [accounts]
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountsSummary"
+
+  /accounts/{id}:
+    get:
+      operationId: getAccount
+      summary: Get account
+      tags: [accounts]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Account detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+
+  /accounts/{id}/transactions:
+    get:
+      operationId: getAccountTransactions
+      summary: Account transactions
+      tags: [accounts]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [credit, debit]
+      responses:
+        "200":
+          description: Transactions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionList"
+
+  # Cards
+  /cards:
+    get:
+      operationId: getCards
+      summary: List cards
+      tags: [cards]
+      responses:
+        "200":
+          description: Cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Card"
+    post:
+      operationId: createCard
+      summary: Issue card
+      tags: [cards]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCardRequest"
+      responses:
+        "201":
+          description: Card issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+
+  /cards/{id}:
+    get:
+      operationId: getCard
+      summary: Get card
+      tags: [cards]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Card detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+
+  /cards/{id}/freeze:
+    put:
+      operationId: freezeCard
+      summary: Freeze card
+      tags: [cards]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Card frozen
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+
+  /cards/{id}/unfreeze:
+    put:
+      operationId: unfreezeCard
+      summary: Unfreeze card
+      tags: [cards]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Card unfrozen
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+
+  # Payments
+  /payments/beneficiaries:
+    get:
+      operationId: getBeneficiaries
+      summary: List beneficiaries
+      tags: [payments]
+      responses:
+        "200":
+          description: Beneficiaries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Beneficiary"
+    post:
+      operationId: createBeneficiary
+      summary: Add beneficiary
+      tags: [payments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBeneficiaryRequest"
+      responses:
+        "201":
+          description: Beneficiary added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Beneficiary"
+
+  /payments/fx/quote:
+    get:
+      operationId: getFxQuote
+      summary: Get FX quote
+      tags: [payments]
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: amount
+          in: query
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: FX quote
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FxQuote"
+
+  /payments/transfer/initiate:
+    post:
+      operationId: initiateTransfer
+      summary: Initiate transfer
+      tags: [payments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InitiateTransferRequest"
+      responses:
+        "200":
+          description: Transfer initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransferInitiateResponse"
+
+  /payments/transfer/confirm:
+    post:
+      operationId: confirmTransfer
+      summary: Confirm transfer with OTP
+      tags: [payments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmTransferRequest"
+      responses:
+        "200":
+          description: Transfer confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+
+  /payments/transfers:
+    get:
+      operationId: getTransfers
+      summary: Transfer history
+      tags: [payments]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Transfers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentList"
+
+  # Notifications
+  /notifications:
+    get:
+      operationId: getNotifications
+      summary: List notifications
+      tags: [notifications]
+      parameters:
+        - name: unread_only
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/read-all:
+    put:
+      operationId: markAllNotificationsRead
+      summary: Mark all read
+      tags: [notifications]
+      responses:
+        "200":
+          description: All read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  # User
+  /users/me:
+    get:
+      operationId: getMe
+      summary: Get current user
+      tags: [users]
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /users/me/activity:
+    get:
+      operationId: getRecentActivity
+      summary: Recent activity
+      tags: [users]
+      responses:
+        "200":
+          description: Activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +580,535 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+    MessageResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+
+    RegisterRequest:
+      type: object
+      required: [email, password, accountType]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        accountType:
+          type: string
+          enum: [individual, business]
+        firstName:
+          type: string
+        lastName:
+          type: string
+
+    RegisterResponse:
+      type: object
+      required: [userId, nextStep]
+      properties:
+        userId:
+          type: string
+        nextStep:
+          type: string
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    LoginResponse:
+      type: object
+      required: [accessToken, user]
+      properties:
+        accessToken:
+          type: string
+        user:
+          $ref: "#/components/schemas/UserProfile"
+
+    VerifyOtpRequest:
+      type: object
+      required: [userId, code]
+      properties:
+        userId:
+          type: string
+        code:
+          type: string
+
+    VerifyEmailResponse:
+      type: object
+      required: [verified, nextStep]
+      properties:
+        verified:
+          type: boolean
+        nextStep:
+          type: string
+
+    RefreshTokenResponse:
+      type: object
+      required: [accessToken]
+      properties:
+        accessToken:
+          type: string
+
+    RequestOtpRequest:
+      type: object
+      required: [purpose]
+      properties:
+        purpose:
+          type: string
+          enum: [step_up, phone_verify, password_reset]
+
+    StartOnboardingRequest:
+      type: object
+      required: [flowType, countryCode]
+      properties:
+        flowType:
+          type: string
+          enum: [individual, business]
+        countryCode:
+          type: string
+
+    OnboardingFlowResponse:
+      type: object
+      required: [applicationId, currentStep, flowConfig]
+      properties:
+        applicationId:
+          type: string
+        currentStep:
+          type: string
+        flowConfig:
+          type: object
+          additionalProperties: true
+
+    OnboardingStepRequest:
+      type: object
+      required: [applicationId, stepId, data]
+      properties:
+        applicationId:
+          type: string
+        stepId:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+
+    OnboardingStepResponse:
+      type: object
+      required: [stepId, nextStep, status]
+      properties:
+        stepId:
+          type: string
+        nextStep:
+          type: string
+        status:
+          type: string
+          enum: [in_progress, kyc_pending, approved, rejected]
+
+    OnboardingStatus:
+      type: object
+      required: [applicationId, status, currentStep, completedSteps]
+      properties:
+        applicationId:
+          type: string
+        status:
+          type: string
+          enum: [in_progress, kyc_pending, approved, rejected, manual_review]
+        currentStep:
+          type: string
+        completedSteps:
+          type: array
+          items:
+            type: string
+        kycStatus:
+          type: string
+          enum: [not_started, pending, approved, rejected]
+
+    Account:
+      type: object
+      required: [id, currency, balance, availableBalance, status, createdAt]
+      properties:
+        id:
+          type: string
+        currency:
+          type: string
+          enum: [USD, EUR, GBP, SGD, AED]
+        iban:
+          type: string
+        accountNumber:
+          type: string
+        sortCode:
+          type: string
+        balance:
+          type: number
+        availableBalance:
+          type: number
+        status:
+          type: string
+          enum: [active, frozen, closed]
+        createdAt:
+          type: string
+          format: date-time
+
+    AccountsSummary:
+      type: object
+      required: [totalBalanceUsd, accounts, recentTransactions, monthlySpend, monthlyIncome]
+      properties:
+        totalBalanceUsd:
+          type: number
+        accounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Account"
+        recentTransactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transaction"
+        monthlySpend:
+          type: number
+        monthlyIncome:
+          type: number
+        pendingTransactions:
+          type: integer
+
+    CreateAccountRequest:
+      type: object
+      required: [currency]
+      properties:
+        currency:
+          type: string
+          enum: [USD, EUR, GBP, SGD, AED]
+
+    Transaction:
+      type: object
+      required: [id, type, amount, currency, description, status, createdAt]
+      properties:
+        id:
+          type: string
+        accountId:
+          type: string
+        type:
+          type: string
+          enum: [credit, debit]
+        category:
+          type: string
+          enum: [transfer, card, fee, fx, interest]
+        amount:
+          type: number
+        currency:
+          type: string
+        description:
+          type: string
+        reference:
+          type: string
+        counterparty:
+          type: object
+          properties:
+            name:
+              type: string
+            accountNumber:
+              type: string
+            bankName:
+              type: string
+        status:
+          type: string
+          enum: [pending, completed, failed, reversed]
+        createdAt:
+          type: string
+          format: date-time
+
+    TransactionList:
+      type: object
+      required: [items, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transaction"
+        total:
+          type: integer
+
+    Card:
+      type: object
+      required: [id, cardType, lastFour, status, createdAt]
+      properties:
+        id:
+          type: string
+        accountId:
+          type: string
+        cardType:
+          type: string
+          enum: [virtual, physical]
+        lastFour:
+          type: string
+        expiryMonth:
+          type: integer
+        expiryYear:
+          type: integer
+        status:
+          type: string
+          enum: [active, frozen, cancelled, expired]
+        spendLimitDaily:
+          type: number
+        spendLimitMonthly:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateCardRequest:
+      type: object
+      required: [accountId, cardType]
+      properties:
+        accountId:
+          type: string
+        cardType:
+          type: string
+          enum: [virtual, physical]
+
+    Beneficiary:
+      type: object
+      required: [id, name, currency, createdAt]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        accountNumber:
+          type: string
+        sortCode:
+          type: string
+        iban:
+          type: string
+        swiftBic:
+          type: string
+        bankName:
+          type: string
+        country:
+          type: string
+        currency:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateBeneficiaryRequest:
+      type: object
+      required: [name, currency]
+      properties:
+        name:
+          type: string
+        accountNumber:
+          type: string
+        sortCode:
+          type: string
+        iban:
+          type: string
+        swiftBic:
+          type: string
+        bankName:
+          type: string
+        country:
+          type: string
+        currency:
+          type: string
+
+    FxQuote:
+      type: object
+      required: [from, to, rate, amount, convertedAmount, fee, expiresAt]
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        rate:
+          type: number
+        amount:
+          type: number
+        convertedAmount:
+          type: number
+        fee:
+          type: number
+        quoteId:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+
+    InitiateTransferRequest:
+      type: object
+      required: [fromAccountId, beneficiaryId, amount, currency]
+      properties:
+        fromAccountId:
+          type: string
+        beneficiaryId:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+        reference:
+          type: string
+        quoteId:
+          type: string
+
+    TransferInitiateResponse:
+      type: object
+      required: [transferId, requiresOtp]
+      properties:
+        transferId:
+          type: string
+        requiresOtp:
+          type: boolean
+        fee:
+          type: number
+        estimatedArrival:
+          type: string
+
+    ConfirmTransferRequest:
+      type: object
+      required: [transferId, otpCode]
+      properties:
+        transferId:
+          type: string
+        otpCode:
+          type: string
+
+    Payment:
+      type: object
+      required: [id, amount, currency, status, createdAt]
+      properties:
+        id:
+          type: string
+        fromAccountId:
+          type: string
+        beneficiaryId:
+          type: string
+        amount:
+          type: number
+        sourceCurrency:
+          type: string
+        destinationCurrency:
+          type: string
+        exchangeRate:
+          type: number
+        destinationAmount:
+          type: number
+        fee:
+          type: number
+        currency:
+          type: string
+        reference:
+          type: string
+        status:
+          type: string
+          enum: [pending, processing, completed, failed, cancelled]
+        providerReference:
+          type: string
+        initiatedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    PaymentList:
+      type: object
+      required: [items, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Payment"
+        total:
+          type: integer
+
+    Notification:
+      type: object
+      required: [id, type, title, body, read, createdAt]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [credit, debit, card, payment, kyc, system]
+        title:
+          type: string
+        body:
+          type: string
+        read:
+          type: boolean
+        metadata:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+
+    UserProfile:
+      type: object
+      required: [id, email, accountType, kycStatus, createdAt]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        accountType:
+          type: string
+          enum: [individual, business]
+        kycStatus:
+          type: string
+          enum: [pending, in_progress, approved, rejected]
+        emailVerified:
+          type: boolean
+        phoneVerified:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    ActivityItem:
+      type: object
+      required: [id, type, title, timestamp]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [transaction, card, payment, login, kyc]
+        title:
+          type: string
+        description:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+        timestamp:
+          type: string
+          format: date-time

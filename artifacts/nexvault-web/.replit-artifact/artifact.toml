@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Nexvault — Digital Banking"
+version = "1.0.0"
+id = "artifacts/nexvault-web"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23553
+
+[services.development]
+run = "pnpm --filter @workspace/nexvault-web run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/nexvault-web", "run", "build" ]
+publicDir = "artifacts/nexvault-web/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23553"
+BASE_PATH = "/"

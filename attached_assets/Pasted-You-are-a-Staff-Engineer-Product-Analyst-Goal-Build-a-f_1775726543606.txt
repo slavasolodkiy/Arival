@@ -1,0 +1,67 @@
+You are a Staff Engineer + Product Analyst.
+
+Goal:
+Build a fintech web+mobile platform inspired by publicly observable UX patterns of arivalbank.com, arival.com, App Store page (Arival), and Google Play page (Arival), but with original branding and original code.
+
+Strict constraints:
+1) Do NOT copy trademarked assets, logos, texts, screenshots, or proprietary code.
+2) Use only public information (web pages, app-store metadata, publicly visible app behavior).
+3) No reverse engineering of private infrastructure, no traffic interception of protected APIs.
+4) For unknown facts, mark as “Hypothesis” with confidence score.
+
+Deliver in phases with commits after each phase:
+
+Phase 1 — Public Research Pack
+- docs/research/feature-map.md
+- docs/research/architecture-hypotheses.md
+- docs/research/integrations-public-evidence.md
+- Include evidence links + confidence (High/Medium/Low) per claim.
+
+Phase 2 — System Design (Original)
+- docs/architecture/system-design.md
+- docs/architecture/microservices.md
+- docs/architecture/frontend-backend-middleware.md
+- Proposed stack: Web, Mobile, API Gateway, Auth/SSO, Onboarding, KYC adapter, Notifications, CRM adapter, Analytics.
+- Add sequence diagrams for onboarding and auth.
+
+Phase 3 — Onboarding Decomposition Engine
+- Implement configurable onboarding flow engine:
+  - Individual customer flow
+  - Business customer flow
+- Output full decision tree:
+  - all questions
+  - allowed answers
+  - branch changes by answer
+  - required docs
+  - country/passport/residency config
+  - supported languages config
+- Files:
+  - docs/onboarding/decision-tree.md
+  - config/onboarding/*.json (or *.yaml)
+  - openapi/onboarding-api.yaml
+
+Phase 4 — Product Build (MVP)
+- Web app + mobile app + backend microservices (monorepo).
+- Include API gateway and service-to-service contracts.
+- Include mock providers for KYC/IDV and SSO adapters.
+- Include tests for onboarding branching logic.
+
+Phase 5 — Integrations & API Surface
+- docs/integrations/public-vs-custom-apis.md
+- Clearly separate:
+  - Publicly documented external APIs found (if any)
+  - Internal APIs designed in this project
+- Focus on ID/SSO/onboarding integration points.
+
+Phase 6 — GitHub Delivery
+- Initialize git, push to PRIVATE GitHub repo.
+- Create clear README with run instructions.
+- Add architecture diagram, API docs, and “Assumptions & Unknowns” section.
+- Create releases/tags per phase.
+
+Output format:
+- At the end of each phase provide:
+  - What was implemented
+  - What is inferred vs confirmed
+  - Open risks
+  - Next phase plan

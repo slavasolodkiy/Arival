@@ -1,0 +1,315 @@
+{
+  "flowId": "individual_v1",
+  "version": "1.0.0",
+  "flowType": "individual",
+  "defaultLanguage": "en",
+  "supportedLanguages": ["en", "de", "fr", "es"],
+  "steps": [
+    {
+      "id": "account_type",
+      "title": "Account Type",
+      "type": "selection",
+      "required": true,
+      "fields": [
+        {
+          "id": "account_type",
+          "type": "radio",
+          "label": "What type of account do you need?",
+          "options": [
+            { "value": "individual", "label": "Personal Account" },
+            { "value": "business", "label": "Business Account" }
+          ],
+          "required": true
+        }
+      ],
+      "branching": {
+        "account_type": {
+          "individual": "personal_info",
+          "business": "REDIRECT_BUSINESS_FLOW"
+        }
+      }
+    },
+    {
+      "id": "personal_info",
+      "title": "Personal Information",
+      "type": "form",
+      "required": true,
+      "fields": [
+        { "id": "first_name", "type": "text", "label": "First Name", "required": true, "maxLength": 100 },
+        { "id": "last_name", "type": "text", "label": "Last Name", "required": true, "maxLength": 100 },
+        { "id": "date_of_birth", "type": "date", "label": "Date of Birth", "required": true, "minAge": 18 },
+        { "id": "nationality", "type": "country_select", "label": "Nationality", "required": true }
+      ],
+      "nextStep": "country_of_residence"
+    },
+    {
+      "id": "country_of_residence",
+      "title": "Country of Residence",
+      "type": "form",
+      "required": true,
+      "fields": [
+        { "id": "country_code", "type": "country_select", "label": "Country of Residence", "required": true },
+        { "id": "address_line_1", "type": "text", "label": "Address Line 1", "required": true },
+        { "id": "address_line_2", "type": "text", "label": "Address Line 2", "required": false },
+        { "id": "city", "type": "text", "label": "City", "required": true },
+        { "id": "postcode", "type": "text", "label": "Postcode / ZIP", "required": true }
+      ],
+      "branching": {
+        "country_code": {
+          "US": "tax_info_fatca",
+          "CA": "tax_info_fatca",
+          "_default": "tax_info_general"
+        }
+      }
+    },
+    {
+      "id": "tax_info_fatca",
+      "title": "Tax Information (FATCA)",
+      "type": "form",
+      "required": true,
+      "description": "As a US/Canadian resident, we are required to collect additional tax information.",
+      "fields": [
+        { "id": "tax_id_number", "type": "text", "label": "Tax Identification Number (TIN/SSN/EIN)", "required": true },
+        {
+          "id": "us_person_confirmation",
+          "type": "checkbox",
+          "label": "I confirm I am a US person for FATCA purposes",
+          "required": true
+        }
+      ],
+      "nextStep": "document_type"
+    },
+    {
+      "id": "tax_info_general",
+      "title": "Tax Residency",
+      "type": "form",
+      "required": true,
+      "fields": [
+        { "id": "tax_country", "type": "country_select", "label": "Country of Tax Residency", "required": true },
+        { "id": "tax_id_number", "type": "text", "label": "Tax Identification Number (optional)", "required": false }
+      ],
+      "nextStep": "document_type"
+    },
+    {
+      "id": "document_type",
+      "title": "Identity Document",
+      "type": "selection",
+      "required": true,
+      "fields": [
+        {
+          "id": "document_type",
+          "type": "radio",
+          "label": "Which document will you use to verify your identity?",
+          "options": [
+            { "value": "passport", "label": "Passport", "icon": "passport" },
+            { "value": "national_id", "label": "National ID Card", "icon": "id_card" },
+            { "value": "driving_licence", "label": "Driving Licence", "icon": "driving" }
+          ],
+          "required": true
+        }
+      ],
+      "countryRestrictions": {
+        "IN": ["passport"],
+        "AE": ["passport"],
+        "US": ["passport", "driving_licence"],
+        "CA": ["passport", "driving_licence"]
+      },
+      "branching": {
+        "document_type": {
+          "passport": "document_upload_passport",
+          "national_id": "document_upload_national_id",
+          "driving_licence": "document_upload_dl"
+        }
+      }
+    },
+    {
+      "id": "document_upload_passport",
+      "title": "Upload Passport",
+      "type": "document_upload",
+      "required": true,
+      "fields": [
+        {
+          "id": "front_image",
+          "type": "file_upload",
+          "label": "Photo page (bio page) of your passport",
+          "acceptedFormats": ["jpg", "jpeg", "png", "pdf"],
+          "maxSizeMB": 10,
+          "required": true
+        }
+      ],
+      "instructions": [
+        "Place your passport on a flat surface",
+        "Make sure all text is clearly visible",
+        "Avoid reflections and glare",
+        "The entire passport page must be in frame"
+      ],
+      "nextStep": "proof_of_address"
+    },
+    {
+      "id": "document_upload_national_id",
+      "title": "Upload National ID",
+      "type": "document_upload",
+      "required": true,
+      "fields": [
+        {
+          "id": "front_image",
+          "type": "file_upload",
+          "label": "Front of national ID",
+          "acceptedFormats": ["jpg", "jpeg", "png"],
+          "maxSizeMB": 10,
+          "required": true
+        },
+        {
+          "id": "back_image",
+          "type": "file_upload",
+          "label": "Back of national ID",
+          "acceptedFormats": ["jpg", "jpeg", "png"],
+          "maxSizeMB": 10,
+          "required": true
+        }
+      ],
+      "nextStep": "proof_of_address"
+    },
+    {
+      "id": "document_upload_dl",
+      "title": "Upload Driving Licence",
+      "type": "document_upload",
+      "required": true,
+      "fields": [
+        {
+          "id": "front_image",
+          "type": "file_upload",
+          "label": "Front of driving licence",
+          "acceptedFormats": ["jpg", "jpeg", "png"],
+          "maxSizeMB": 10,
+          "required": true
+        },
+        {
+          "id": "back_image",
+          "type": "file_upload",
+          "label": "Back of driving licence",
+          "acceptedFormats": ["jpg", "jpeg", "png"],
+          "maxSizeMB": 10,
+          "required": true
+        }
+      ],
+      "nextStep": "proof_of_address"
+    },
+    {
+      "id": "proof_of_address",
+      "title": "Proof of Address",
+      "type": "document_upload",
+      "required": true,
+      "description": "Please provide a document issued in the last 3 months showing your address.",
+      "fields": [
+        {
+          "id": "poa_document_type",
+          "type": "select",
+          "label": "Document type",
+          "options": [
+            { "value": "utility_bill", "label": "Utility Bill" },
+            { "value": "bank_statement", "label": "Bank Statement" },
+            { "value": "government_letter", "label": "Government Letter" },
+            { "value": "council_tax", "label": "Council Tax Statement" }
+          ],
+          "required": true
+        },
+        {
+          "id": "poa_image",
+          "type": "file_upload",
+          "label": "Upload document",
+          "acceptedFormats": ["jpg", "jpeg", "png", "pdf"],
+          "maxSizeMB": 10,
+          "required": true
+        }
+      ],
+      "nextStep": "selfie_check"
+    },
+    {
+      "id": "selfie_check",
+      "title": "Selfie Verification",
+      "type": "selfie",
+      "required": true,
+      "description": "We need to verify your identity matches your documents.",
+      "fields": [
+        {
+          "id": "selfie_image",
+          "type": "camera_capture",
+          "label": "Take a selfie",
+          "required": true
+        }
+      ],
+      "instructions": [
+        "Find a well-lit area",
+        "Look directly at the camera",
+        "Remove glasses or hats",
+        "Hold still for a moment"
+      ],
+      "nextStep": "funding_source"
+    },
+    {
+      "id": "funding_source",
+      "title": "Source of Funds",
+      "type": "form",
+      "required": true,
+      "description": "We are required by law to understand the source of your funds.",
+      "fields": [
+        {
+          "id": "source",
+          "type": "radio",
+          "label": "Primary source of funds",
+          "options": [
+            { "value": "employment", "label": "Employment / Salary" },
+            { "value": "business", "label": "Business Income" },
+            { "value": "investment", "label": "Investments" },
+            { "value": "savings", "label": "Savings" },
+            { "value": "inheritance", "label": "Inheritance" },
+            { "value": "other", "label": "Other" }
+          ],
+          "required": true
+        },
+        {
+          "id": "monthly_income_range",
+          "type": "select",
+          "label": "Estimated monthly income",
+          "options": [
+            { "value": "lt_1000", "label": "Less than $1,000" },
+            { "value": "1000_5000", "label": "$1,000 - $5,000" },
+            { "value": "5000_15000", "label": "$5,000 - $15,000" },
+            { "value": "15000_50000", "label": "$15,000 - $50,000" },
+            { "value": "gt_50000", "label": "More than $50,000" }
+          ],
+          "required": true
+        }
+      ],
+      "nextStep": "terms_acceptance"
+    },
+    {
+      "id": "terms_acceptance",
+      "title": "Terms & Conditions",
+      "type": "terms",
+      "required": true,
+      "fields": [
+        {
+          "id": "terms_accepted",
+          "type": "checkbox",
+          "label": "I agree to the Terms & Conditions and Account Agreement",
+          "required": true
+        },
+        {
+          "id": "privacy_accepted",
+          "type": "checkbox",
+          "label": "I have read and understood the Privacy Policy",
+          "required": true
+        },
+        {
+          "id": "marketing_consent",
+          "type": "checkbox",
+          "label": "I agree to receive marketing communications (optional)",
+          "required": false
+        }
+      ],
+      "nextStep": "SUBMIT_KYC"
+    }
+  ]
+}

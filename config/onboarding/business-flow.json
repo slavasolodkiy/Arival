@@ -1,0 +1,260 @@
+{
+  "flowId": "business_v1",
+  "version": "1.0.0",
+  "flowType": "business",
+  "defaultLanguage": "en",
+  "supportedLanguages": ["en", "de", "fr", "es"],
+  "steps": [
+    {
+      "id": "business_info",
+      "title": "Business Information",
+      "type": "form",
+      "required": true,
+      "fields": [
+        { "id": "company_name", "type": "text", "label": "Registered Company Name", "required": true },
+        {
+          "id": "company_type",
+          "type": "select",
+          "label": "Company Type",
+          "options": [
+            { "value": "ltd", "label": "Private Limited (Ltd)" },
+            { "value": "llc", "label": "Limited Liability Company (LLC)" },
+            { "value": "plc", "label": "Public Limited Company (PLC)" },
+            { "value": "listed", "label": "Listed Company" },
+            { "value": "partnership", "label": "Partnership" },
+            { "value": "sole_trader", "label": "Sole Trader" },
+            { "value": "other", "label": "Other" }
+          ],
+          "required": true
+        },
+        { "id": "registration_number", "type": "text", "label": "Company Registration Number", "required": true },
+        { "id": "country_of_incorporation", "type": "country_select", "label": "Country of Incorporation", "required": true },
+        {
+          "id": "industry_code",
+          "type": "select",
+          "label": "Industry",
+          "options": [
+            { "value": "technology", "label": "Technology / Software" },
+            { "value": "ecommerce", "label": "E-Commerce / Retail" },
+            { "value": "consulting", "label": "Consulting / Professional Services" },
+            { "value": "finance", "label": "Finance / Investment" },
+            { "value": "healthcare", "label": "Healthcare" },
+            { "value": "education", "label": "Education" },
+            { "value": "media", "label": "Media / Entertainment" },
+            { "value": "logistics", "label": "Logistics / Supply Chain" },
+            { "value": "real_estate", "label": "Real Estate" },
+            { "value": "other", "label": "Other" }
+          ],
+          "required": true
+        },
+        { "id": "description_of_business", "type": "textarea", "label": "Brief description of your business", "required": true, "maxLength": 500 }
+      ],
+      "nextStep": "business_address"
+    },
+    {
+      "id": "business_address",
+      "title": "Business Address",
+      "type": "form",
+      "required": true,
+      "fields": [
+        { "id": "address_line_1", "type": "text", "label": "Address Line 1", "required": true },
+        { "id": "address_line_2", "type": "text", "label": "Address Line 2", "required": false },
+        { "id": "city", "type": "text", "label": "City", "required": true },
+        { "id": "postcode", "type": "text", "label": "Postcode / ZIP", "required": true },
+        { "id": "country_code", "type": "country_select", "label": "Country", "required": true }
+      ],
+      "nextStep": "business_director"
+    },
+    {
+      "id": "business_director",
+      "title": "Director / Beneficial Owner",
+      "type": "form",
+      "required": true,
+      "description": "Please provide details for each director or Ultimate Beneficial Owner (UBO) with 25% or more ownership.",
+      "fields": [
+        { "id": "director_first_name", "type": "text", "label": "First Name", "required": true },
+        { "id": "director_last_name", "type": "text", "label": "Last Name", "required": true },
+        { "id": "director_dob", "type": "date", "label": "Date of Birth", "required": true },
+        { "id": "director_nationality", "type": "country_select", "label": "Nationality", "required": true },
+        { "id": "ownership_percentage", "type": "number", "label": "Ownership %", "min": 0, "max": 100, "required": true },
+        { "id": "director_address_line_1", "type": "text", "label": "Home Address Line 1", "required": true },
+        { "id": "director_city", "type": "text", "label": "City", "required": true },
+        { "id": "director_country", "type": "country_select", "label": "Country of Residence", "required": true }
+      ],
+      "nextStep": "business_directors_additional"
+    },
+    {
+      "id": "business_directors_additional",
+      "title": "Additional Directors",
+      "type": "selection",
+      "required": true,
+      "fields": [
+        {
+          "id": "has_additional_directors",
+          "type": "radio",
+          "label": "Are there additional directors or beneficial owners with 25% or more ownership?",
+          "options": [
+            { "value": "yes", "label": "Yes, add another" },
+            { "value": "no", "label": "No, that's all" }
+          ],
+          "required": true
+        }
+      ],
+      "branching": {
+        "has_additional_directors": {
+          "yes": "business_director",
+          "no": "business_documents"
+        }
+      }
+    },
+    {
+      "id": "business_documents",
+      "title": "Business Documents",
+      "type": "document_upload",
+      "required": true,
+      "fields": [
+        {
+          "id": "certificate_of_incorporation",
+          "type": "file_upload",
+          "label": "Certificate of Incorporation",
+          "acceptedFormats": ["pdf", "jpg", "jpeg", "png"],
+          "maxSizeMB": 20,
+          "required": true
+        },
+        {
+          "id": "memorandum_of_association",
+          "type": "file_upload",
+          "label": "Memorandum & Articles of Association",
+          "acceptedFormats": ["pdf"],
+          "maxSizeMB": 20,
+          "required": true
+        },
+        {
+          "id": "proof_of_business_address",
+          "type": "file_upload",
+          "label": "Proof of Business Address (utility bill or bank statement, max 3 months old)",
+          "acceptedFormats": ["pdf", "jpg", "jpeg", "png"],
+          "maxSizeMB": 10,
+          "required": true
+        },
+        {
+          "id": "shareholder_register",
+          "type": "file_upload",
+          "label": "Shareholder Register",
+          "acceptedFormats": ["pdf"],
+          "maxSizeMB": 20,
+          "required": false,
+          "conditionallyRequired": {
+            "field": "company_type",
+            "notIn": ["listed"],
+            "message": "Required for non-listed companies"
+          }
+        }
+      ],
+      "nextStep": "authorized_signatory"
+    },
+    {
+      "id": "authorized_signatory",
+      "title": "Authorized Signatory",
+      "type": "form",
+      "required": true,
+      "fields": [
+        {
+          "id": "signatory_is_director",
+          "type": "radio",
+          "label": "Are you an authorized director of this company?",
+          "options": [
+            { "value": "yes", "label": "Yes" },
+            { "value": "no", "label": "No, I am authorized by a director" }
+          ],
+          "required": true
+        },
+        {
+          "id": "authorization_document",
+          "type": "file_upload",
+          "label": "Authorization letter from director",
+          "acceptedFormats": ["pdf"],
+          "maxSizeMB": 10,
+          "required": false,
+          "showWhen": { "signatory_is_director": "no" }
+        }
+      ],
+      "nextStep": "funding_source_business"
+    },
+    {
+      "id": "funding_source_business",
+      "title": "Business Funds & Activity",
+      "type": "form",
+      "required": true,
+      "fields": [
+        {
+          "id": "primary_revenue_source",
+          "type": "select",
+          "label": "Primary source of business revenue",
+          "options": [
+            { "value": "product_sales", "label": "Product Sales" },
+            { "value": "service_fees", "label": "Service Fees / Consulting" },
+            { "value": "subscriptions", "label": "Subscriptions / SaaS" },
+            { "value": "investment_returns", "label": "Investment Returns" },
+            { "value": "grants", "label": "Grants / Funding" },
+            { "value": "other", "label": "Other" }
+          ],
+          "required": true
+        },
+        {
+          "id": "expected_monthly_volume",
+          "type": "select",
+          "label": "Expected monthly transaction volume",
+          "options": [
+            { "value": "lt_10000", "label": "Less than $10,000" },
+            { "value": "10000_50000", "label": "$10,000 - $50,000" },
+            { "value": "50000_250000", "label": "$50,000 - $250,000" },
+            { "value": "gt_250000", "label": "More than $250,000" }
+          ],
+          "required": true
+        },
+        {
+          "id": "currencies_needed",
+          "type": "multi_select",
+          "label": "Which currencies do you need?",
+          "options": [
+            { "value": "USD", "label": "US Dollar (USD)" },
+            { "value": "EUR", "label": "Euro (EUR)" },
+            { "value": "GBP", "label": "British Pound (GBP)" },
+            { "value": "SGD", "label": "Singapore Dollar (SGD)" },
+            { "value": "AED", "label": "UAE Dirham (AED)" }
+          ],
+          "required": true
+        }
+      ],
+      "nextStep": "business_terms"
+    },
+    {
+      "id": "business_terms",
+      "title": "Terms & Conditions",
+      "type": "terms",
+      "required": true,
+      "fields": [
+        {
+          "id": "terms_accepted",
+          "type": "checkbox",
+          "label": "I agree to the Terms & Conditions and Business Account Agreement",
+          "required": true
+        },
+        {
+          "id": "privacy_accepted",
+          "type": "checkbox",
+          "label": "I have read and understood the Privacy Policy",
+          "required": true
+        },
+        {
+          "id": "aml_policy_accepted",
+          "type": "checkbox",
+          "label": "I confirm the information provided is accurate and accept the AML/KYC Policy",
+          "required": true
+        }
+      ],
+      "nextStep": "SUBMIT_KYC"
+    }
+  ]
+}
