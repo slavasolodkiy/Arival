@@ -12,7 +12,7 @@ import {
 
 const router = Router();
 
-const DEMO_MODE = process.env.DEMO_MODE === "true" || process.env.NODE_ENV !== "production";
+const DEMO_MODE = process.env.DEMO_MODE === "true";
 const OTP_REQUIRED_THRESHOLD = 500;
 
 const FX_RATES: Record<string, Record<string, number>> = {

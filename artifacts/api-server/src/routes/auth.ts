@@ -12,7 +12,7 @@ const router = Router();
 const JWT_SECRET = process.env.SESSION_SECRET ?? "nexvault-dev-secret-change-in-prod";
 const ACCESS_TOKEN_TTL = "15m";
 const REFRESH_TOKEN_TTL = "30d";
-const DEMO_MODE = process.env.DEMO_MODE === "true" || process.env.NODE_ENV !== "production";
+const DEMO_MODE = process.env.DEMO_MODE === "true";
 
 function generateAccessToken(userId: string) {
   return jwt.sign({ userId, type: "access" }, JWT_SECRET, { expiresIn: ACCESS_TOKEN_TTL });
