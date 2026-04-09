@@ -18,6 +18,8 @@ This document maps every platform capability to its implementation artifacts, te
 | Password hashing | ✅ Done | `bcrypt` with 12 rounds | `auth.ts` line ~35 |
 | OTP for high-value payments | ✅ Done | Transfers ≥ $500 require OTP; stored in `otp_codes` table with expiry | `payments.ts` confirm route |
 | OTP demo code | ✅ Done | In demo mode, OTP always "123456"; `devOtp` returned in response | `auth.ts` OTP generation |
+| OTP verify endpoint | ✅ Done | `POST /api/auth/otp/verify` — validates code, marks used | `auth.ts` + OpenAPI spec synced |
+| DEMO_MODE strict flag | ✅ Done | Only `process.env.DEMO_MODE === "true"` — no NODE_ENV fallback | `onboarding.ts`, `auth.ts` |
 
 ---
 
@@ -26,17 +28,21 @@ This document maps every platform capability to its implementation artifacts, te
 | Capability | Status | Implementation | Evidence |
 |---|---|---|---|
 | Config-driven flow (individual) | ✅ Done | `config/onboarding/individual-flow.json` | 13 steps rendered dynamically |
-| Config-driven flow (business) | ✅ Done | `config/onboarding/business-flow.json` | Redirect triggered on accountType=business |
+| Config-driven flow (business) | ✅ Done | `config/onboarding/business-flow.json` | Triggered when accountType=business selected |
 | Branching logic (FATCA) | ✅ Done | `flowConfig.branches` → US residents get `tax_info_fatca` step | Onboarding page branch resolver |
 | Field types rendered | ✅ Done | text, date, select, radio, checkbox, country_select, document_upload, selfie | `onboarding.tsx` FieldRenderer |
 | Document upload (demo stub) | ✅ Done | File input rendered; auto-approved in demo mode | Step `document_upload` in flow |
 | Selfie capture (demo stub) | ✅ Done | Camera icon + continue; auto-approved in demo | Step `selfie_check` in flow |
 | Progress bar | ✅ Done | `currentStepIndex / totalSteps` percent | Onboarding header bar |
 | Server-side state machine | ✅ Done | Strict `in_progress` → `kyc_pending` → `approved` transitions | `onboarding.ts` routes |
+| Step-order enforcement | ✅ Done | Server rejects any stepId ≠ `currentStep` with 400 | Integration test: "step out of order" |
 | Auto-approve (demo) | ✅ Done | `DEMO_MODE=true` skips manual review | Final step callback |
 | Account provisioning | ✅ Done | 3 multi-currency accounts created on approval (USD/EUR/GBP) | `accounts.ts` seed logic |
-| Business redirect | ✅ Done | `startOnboarding` returns `type=business_redirect` with deep-link URL | Onboarding page handles redirect |
+| Business redirect | ✅ Done | `REDIRECT_BUSINESS_FLOW` not in `TERMINAL_SIGNALS` — updates flowType, restarts at first business step | `onboarding.ts` state machine |
+| `REDIRECT_BUSINESS_FLOW` removed from terminals | ✅ Done | P0 fix: was causing premature approval; now correctly switches flow | Integration test covers this |
 | Onboarding status field | ✅ Done | `StartOnboardingResponse.status` added to Zod + TS types | `api-zod`, `api-client-react` |
+| Mobile onboarding screens | ✅ Done | `(onboarding)/index.tsx` — full field renderer, progress bar, success screen | Expo mobile app |
+| Mobile KYC gating | ✅ Done | `AuthContext` routes to `/(onboarding)` until `kycStatus === "approved"` | `context/AuthContext.tsx` |
 
 ---
 
@@ -67,10 +73,12 @@ This document maps every platform capability to its implementation artifacts, te
 
 | Capability | Status | Implementation | Evidence |
 |---|---|---|---|
-| Initiate transfer | ✅ Done | `POST /api/payments/initiate` | Payments page |
-| OTP confirmation (≥ $500) | ✅ Done | `POST /api/payments/confirm` with OTP | Demo OTP "123456" |
+| Initiate transfer | ✅ Done | `POST /api/payments/transfer/initiate` | Payments page |
+| OTP confirmation (≥ $500) | ✅ Done | `POST /api/payments/transfer/confirm` with OTP | Demo OTP "123456" |
+| OTP confirm missing guard | ✅ Done | 400 returned if `otpCode` absent in confirm body | Integration test: schema validation |
 | Payment history | ✅ Done | `GET /api/payments` | Payments page table |
-| SQL injection prevention | ✅ Done | Replaced `sql.raw` with `inArray()` | Phase A security fix |
+| `PaymentRow` component | ✅ Done | Mobile `PaymentRow.tsx` renders `Payment` type correctly (no type mismatch) | Typecheck: 0 errors |
+| SQL injection prevention | ✅ Done | Replaced `sql.raw` with `inArray()` in `users.ts` | Security fix — P0 |
 | Transfer fee calculation | ✅ Done | Fee returned in initiate response | UI shows fee breakdown |
 
 ---
@@ -79,14 +87,14 @@ This document maps every platform capability to its implementation artifacts, te
 
 | Capability | Status | Implementation | Evidence |
 |---|---|---|---|
-| CORS allowlist | ✅ Done | `ALLOWED_ORIGINS` env var; dev allows all | `api-server/src/index.ts` |
-| Parameterised SQL | ✅ Done | Drizzle ORM — no raw interpolation | Phase A |
+| CORS allowlist | ✅ Done | `ALLOWED_ORIGINS` env var; dev allows all | `api-server/src/app.ts` |
+| Parameterised SQL | ✅ Done | Drizzle ORM — no raw interpolation; `inArray()` replacing `sql.raw` | P0 security fix |
 | JWT secret rotation | ✅ Done | `SESSION_SECRET` env var (Replit secret) | `auth.ts` |
 | Refresh token httpOnly cookie | ✅ Done | SameSite=Strict, Secure in production | `auth.ts` |
 | OTP expiry (5 min) | ✅ Done | `expiresAt` stored, validated server-side | `otp_codes` table |
-| Rate limiting | ⚠️ Partial | Not yet implemented for OTP/auth routes | Phase F backlog |
-| 2FA (TOTP) | ❌ Not started | Backlog | Phase F |
-| AML screening | ❌ Not started | Backlog — would integrate Comply Advantage | Phase G |
+| Rate limiting | ⚠️ Partial | Not yet implemented for OTP/auth routes | Backlog |
+| 2FA (TOTP) | ❌ Not started | Backlog | Backlog |
+| AML screening | ❌ Not started | Backlog — would integrate Comply Advantage | Backlog |
 
 ---
 
@@ -94,15 +102,19 @@ This document maps every platform capability to its implementation artifacts, te
 
 | Capability | Status | Implementation | Evidence |
 |---|---|---|---|
-| TypeScript strict mode | ✅ Done | All packages build clean (`tsc --noEmit`) | Phase A + B |
-| OpenAPI spec | ✅ Done | `lib/api-spec/openapi.yaml` | Orval codegen source |
-| Generated React Query hooks | ✅ Done | `lib/api-client-react/src/generated/api.ts` | Orval output |
-| Generated Zod schemas | ✅ Done | `lib/api-zod/src/generated/api.ts` | Orval output |
+| TypeScript strict mode | ✅ Done | All 9 packages build clean (`tsc --noEmit`) | Full workspace typecheck: 0 errors |
+| OpenAPI spec | ✅ Done | `lib/api-spec/openapi.yaml` | Manually maintained (codegen broken) |
+| `/auth/otp/verify` in spec | ✅ Done | Added endpoint + `VerifyOtp` request/response types | P1 OpenAPI sync |
+| `payment_confirm` OTP purpose | ✅ Done | Added to purpose enum in spec + Zod schemas | P1 OpenAPI sync |
+| Generated React Query hooks | ✅ Done | `lib/api-client-react/src/generated/api.ts` — `useVerifyOtp` added | Manually patched |
+| Generated Zod schemas | ✅ Done | `lib/api-zod/src/generated/api.ts` — `VerifyOtp` types added | Manually patched |
 | Drizzle ORM migrations | ✅ Done | `lib/db/src/schema.ts` | `drizzle-kit push` |
 | Config-driven onboarding | ✅ Done | JSON flow configs, not hardcoded | `config/onboarding/` |
-| DEMO_MODE flag | ✅ Done | Auto-approves KYC, returns dev OTP | `api-server` env |
-| GitHub Actions CI | ✅ Done | `.github/workflows/ci.yml` — typecheck + unit tests | Phase E |
+| DEMO_MODE flag | ✅ Done | Auto-approves KYC, returns dev OTP; only `==="true"` check | `api-server` env |
+| GitHub Actions CI | ✅ Done | `.github/workflows/ci.yml` — typecheck + unit + integration tests | Phase E |
 | Unit tests (Vitest) | ✅ Done | Auth hashing, OTP lifecycle, payment threshold | `artifacts/api-server/src/__tests__/` |
+| Route-level integration tests | ✅ Done | 39 tests passing — auth guards, schema validation, step-order, OTP confirm | `src/__tests__/routes.integration.test.ts` |
+| `TERMINAL_SIGNALS` exported | ✅ Done | `export const TERMINAL_SIGNALS` — directly testable | Integration test verifies `REDIRECT_BUSINESS_FLOW` absent |
 
 ---
 
@@ -119,15 +131,29 @@ This document maps every platform capability to its implementation artifacts, te
 | Cards | ✅ Done | `/cards` | Virtual + physical card management |
 | Payments | ✅ Done | `/payments` | Transfer form + history |
 | Settings | ✅ Done | `/settings` | Profile management |
-| Mobile App (Expo) | ⚠️ Pending | `artifacts/nexvault-mobile` | Phase C |
 
 ---
 
-## 9. Open Gaps / Backlog
+## 9. Mobile App (Expo)
+
+| Screen | Status | Path | Notes |
+|---|---|---|---|
+| Auth gating | ✅ Done | `AuthContext.tsx` | Redirects to `/(onboarding)` until kycStatus=approved |
+| Login screen | ✅ Done | `app/(auth)/login.tsx` | JWT stored in AsyncStorage |
+| Register screen | ✅ Done | `app/(auth)/register.tsx` | |
+| Onboarding flow | ✅ Done | `app/(onboarding)/index.tsx` | Full field renderer (text/radio/select/checkbox), progress bar, success state |
+| Dashboard tab | ✅ Done | `app/(tabs)/index.tsx` | Balance + recent transactions |
+| Accounts tab | ✅ Done | `app/(tabs)/accounts.tsx` | Multi-currency accounts list |
+| Cards tab | ✅ Done | `app/(tabs)/cards.tsx` | Freeze/unfreeze, masked PAN |
+| Payments tab | ✅ Done | `app/(tabs)/payments.tsx` | Transfer + OTP confirmation |
+| Settings tab | ✅ Done | `app/(tabs)/settings.tsx` | Profile + logout |
+
+---
+
+## 10. Open Gaps / Backlog
 
 | Item | Priority | Phase |
 |---|---|---|
-| Expo mobile app | High | C |
 | Rate limiting (auth + OTP routes) | High | F |
 | Webhook system (transaction notifications) | Medium | F |
 | Real document verification (Onfido / Jumio) | Medium | G |
@@ -137,3 +163,4 @@ This document maps every platform capability to its implementation artifacts, te
 | FX rate engine | Low | F |
 | Multi-language i18n | Low | H |
 | Accessibility (WCAG 2.1 AA) audit | Medium | H |
+| Orval codegen broken (manual patch required) | Medium | — |

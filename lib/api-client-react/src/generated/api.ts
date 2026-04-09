@@ -58,6 +58,7 @@ import type {
   UserProfile,
   VerifyEmailResponse,
   VerifyOtpRequest,
+  VerifyOtpResponse,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -648,6 +649,91 @@ export const useRequestOtp = <
   TContext
 > => {
   return useMutation(getRequestOtpMutationOptions(options));
+};
+
+/**
+ * @summary Verify a one-time passcode
+ */
+export const getVerifyOtpUrl = () => {
+  return `/api/auth/otp/verify`;
+};
+
+export const verifyOtp = async (
+  verifyOtpRequest: VerifyOtpRequest,
+  options?: RequestInit,
+): Promise<VerifyOtpResponse> => {
+  return customFetch<VerifyOtpResponse>(getVerifyOtpUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(verifyOtpRequest),
+  });
+};
+
+export const getVerifyOtpMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof verifyOtp>>,
+    TError,
+    { data: BodyType<VerifyOtpRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof verifyOtp>>,
+  TError,
+  { data: BodyType<VerifyOtpRequest> },
+  TContext
+> => {
+  const mutationKey = ["verifyOtp"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof verifyOtp>>,
+    { data: BodyType<VerifyOtpRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+    return verifyOtp(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type VerifyOtpMutationResult = NonNullable<
+  Awaited<ReturnType<typeof verifyOtp>>
+>;
+export type VerifyOtpMutationBody = BodyType<VerifyOtpRequest>;
+export type VerifyOtpMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Verify a one-time passcode
+ */
+export const useVerifyOtp = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof verifyOtp>>,
+    TError,
+    { data: BodyType<VerifyOtpRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof verifyOtp>>,
+  TError,
+  { data: BodyType<VerifyOtpRequest> },
+  TContext
+> => {
+  return useMutation(getVerifyOtpMutationOptions(options));
 };
 
 /**

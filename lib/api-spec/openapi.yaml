@@ -142,6 +142,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
 
+  /auth/otp/verify:
+    post:
+      operationId: verifyOtp
+      summary: Verify a one-time passcode
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyOtpRequest"
+      responses:
+        "200":
+          description: OTP verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyOtpResponse"
+        "400":
+          description: Invalid or expired OTP
+
   # Onboarding
   /onboarding/start:
     post:
@@ -673,7 +694,26 @@ components:
       properties:
         purpose:
           type: string
-          enum: [step_up, phone_verify, password_reset]
+          enum: [step_up, phone_verify, password_reset, payment_confirm]
+
+    VerifyOtpRequest:
+      type: object
+      required: [userId, code, purpose]
+      properties:
+        userId:
+          type: string
+        code:
+          type: string
+        purpose:
+          type: string
+          enum: [step_up, phone_verify, password_reset, payment_confirm, email_verify]
+
+    VerifyOtpResponse:
+      type: object
+      required: [verified]
+      properties:
+        verified:
+          type: boolean
 
     StartOnboardingRequest:
       type: object
@@ -687,12 +727,15 @@ components:
 
     OnboardingFlowResponse:
       type: object
-      required: [applicationId, currentStep, flowConfig]
+      required: [applicationId, currentStep, status, flowConfig]
       properties:
         applicationId:
           type: string
         currentStep:
           type: string
+        status:
+          type: string
+          enum: [in_progress, kyc_pending, approved, rejected]
         flowConfig:
           type: object
           additionalProperties: true
@@ -720,6 +763,10 @@ components:
         status:
           type: string
           enum: [in_progress, kyc_pending, approved, rejected]
+        flowConfig:
+          type: object
+          additionalProperties: true
+          description: "Present only when flow switches (e.g. individual to business redirect)"
 
     OnboardingStatus:
       type: object

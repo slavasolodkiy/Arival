@@ -9,7 +9,7 @@ import businessFlow from "../../../../config/onboarding/business-flow.json" asse
 
 const router = Router();
 
-const DEMO_MODE = process.env.DEMO_MODE === "true" || process.env.NODE_ENV !== "production";
+const DEMO_MODE = process.env.DEMO_MODE === "true";
 
 type FlowConfig = typeof individualFlow | typeof businessFlow;
 
@@ -18,7 +18,7 @@ const FLOW_CONFIGS: Record<string, FlowConfig> = {
   business: businessFlow,
 };
 
-const TERMINAL_SIGNALS = new Set(["SUBMIT_KYC", "SUBMIT", "REDIRECT_BUSINESS_FLOW"]);
+export const TERMINAL_SIGNALS = new Set(["SUBMIT_KYC", "SUBMIT"]);
 
 // POST /api/onboarding/start
 router.post("/onboarding/start", authMiddleware, async (req: AuthenticatedRequest, res) => {
@@ -136,6 +136,34 @@ router.post("/onboarding/step", authMiddleware, async (req: AuthenticatedRequest
         }
       }
     }
+  }
+
+  // Handle business flow redirect: switch application to business flow
+  if (nextStep === "REDIRECT_BUSINESS_FLOW") {
+    const businessFlowConfig = FLOW_CONFIGS["business"];
+    const firstBusinessStep = businessFlowConfig.steps[0]?.id ?? "business_info";
+    const completedStepsSoFar = Array.isArray(application.completedSteps)
+      ? [...(application.completedSteps as string[]), stepId]
+      : [stepId];
+
+    await db.update(onboardingApplicationsTable)
+      .set({
+        flowType: "business",
+        currentStep: firstBusinessStep,
+        stepData: { ...((application.stepData as Record<string, unknown>) ?? {}), [stepId]: data },
+        completedSteps: completedStepsSoFar,
+        status: "in_progress",
+        updatedAt: new Date(),
+      })
+      .where(eq(onboardingApplicationsTable.id, applicationId));
+
+    res.json({
+      stepId,
+      nextStep: firstBusinessStep,
+      status: "in_progress",
+      flowConfig: businessFlowConfig,
+    });
+    return;
   }
 
   const completedSteps = Array.isArray(application.completedSteps)

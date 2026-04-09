@@ -25,6 +25,7 @@ interface AuthContextValue {
   isLoading: boolean;
   signIn: (token: string, user: User) => Promise<void>;
   signOut: () => Promise<void>;
+  updateUser: (updates: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -33,6 +34,7 @@ const AuthContext = createContext<AuthContextValue>({
   isLoading: true,
   signIn: async () => {},
   signOut: async () => {},
+  updateUser: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -59,13 +61,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (isLoading) return;
+
     const inAuth = segments[0] === "(auth)";
-    if (token && inAuth) {
-      router.replace("/(tabs)");
-    } else if (!token && !inAuth) {
-      router.replace("/(auth)/login");
+    const inOnboarding = segments[0] === "(onboarding)";
+    const inTabs = segments[0] === "(tabs)";
+    const kycApproved = user?.kycStatus === "approved";
+
+    if (!token) {
+      if (!inAuth) router.replace("/(auth)/login");
+      return;
     }
-  }, [token, isLoading, segments]);
+
+    if (token && inAuth) {
+      if (!kycApproved) {
+        router.replace("/(onboarding)");
+      } else {
+        router.replace("/(tabs)");
+      }
+      return;
+    }
+
+    if (token && !kycApproved && !inOnboarding) {
+      router.replace("/(onboarding)");
+      return;
+    }
+
+    if (token && kycApproved && inOnboarding) {
+      router.replace("/(tabs)");
+      return;
+    }
+  }, [token, user?.kycStatus, isLoading, segments]);
 
   const signIn = useCallback(async (newToken: string, newUser: User) => {
     await Promise.all([
@@ -85,8 +110,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
+  const updateUser = useCallback(async (updates: Partial<User>) => {
+    const updated = { ...user, ...updates } as User;
+    setUser(updated);
+    await AsyncStorage.setItem(USER_KEY, JSON.stringify(updated));
+  }, [user]);
+
   return (
-    <AuthContext.Provider value={{ token, user, isLoading, signIn, signOut }}>
+    <AuthContext.Provider value={{ token, user, isLoading, signIn, signOut, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

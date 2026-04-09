@@ -82,11 +82,24 @@ export const LogoutResponse = zod.object({
  * @summary Request step-up OTP
  */
 export const RequestOtpBody = zod.object({
-  purpose: zod.enum(["step_up", "phone_verify", "password_reset"]),
+  purpose: zod.enum(["step_up", "phone_verify", "password_reset", "payment_confirm"]),
 });
 
 export const RequestOtpResponse = zod.object({
   message: zod.string(),
+});
+
+/**
+ * @summary Verify a one-time passcode
+ */
+export const VerifyOtpBody = zod.object({
+  userId: zod.string(),
+  code: zod.string(),
+  purpose: zod.enum(["step_up", "phone_verify", "password_reset", "payment_confirm", "email_verify"]),
+});
+
+export const VerifyOtpResponse = zod.object({
+  verified: zod.boolean(),
 });
 
 /**
@@ -100,7 +113,7 @@ export const StartOnboardingBody = zod.object({
 export const StartOnboardingResponse = zod.object({
   applicationId: zod.string(),
   currentStep: zod.string(),
-  status: zod.enum(["in_progress", "kyc_pending", "approved", "rejected"]).optional(),
+  status: zod.enum(["in_progress", "kyc_pending", "approved", "rejected"]),
   flowConfig: zod.record(zod.string(), zod.unknown()),
 });
 
@@ -117,6 +130,7 @@ export const SubmitOnboardingStepResponse = zod.object({
   stepId: zod.string(),
   nextStep: zod.string(),
   status: zod.enum(["in_progress", "kyc_pending", "approved", "rejected"]),
+  flowConfig: zod.record(zod.string(), zod.unknown()).optional(),
 });
 
 /**

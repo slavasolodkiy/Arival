@@ -1,0 +1,65 @@
+You are continuing repo: slavasolodkiy/Arival.
+Focus only on closing P0/P1 gaps from this review. Do not add new features until all checks are green.
+
+Hard constraints:
+1) Keep legal-safe original branding/code.
+2) DEMO shortcuts must work only when DEMO_MODE=true (explicit), not by NODE_ENV fallback.
+3) Keep API spec and implementation strictly in sync.
+4) No “done” claims in docs unless validated by commands in this run.
+5) Do not commit large binary assets unrelated to runtime.
+
+Tasks:
+
+A) Fix onboarding state machine bug (P0)
+- Remove REDIRECT_BUSINESS_FLOW from terminal states.
+- Implement proper transition when individual flow selects business:
+  - either migrate/create business application and return next step business_info
+  - or remove redundant account_type step when flowType already selected at start.
+- Add integration test proving no premature approve/reject on redirect path.
+
+B) Make workspace typecheck fully green (P0)
+- Ensure `pnpm run typecheck` passes for all packages.
+- Fix current errors in:
+  - artifacts/nexvault-web/src/components/ui/button-group.tsx
+  - artifacts/nexvault-web/src/components/ui/calendar.tsx
+  - artifacts/mockup-sandbox/src/components/ui/calendar.tsx
+  - artifacts/mockup-sandbox/src/components/ui/spinner.tsx
+  - artifacts/nexvault-mobile/app/(tabs)/payments.tsx
+- Resolve React/@types/react version drift across monorepo.
+
+C) Complete security cleanup (P1)
+- Replace remaining sql.raw interpolation in users activity route with safe Drizzle query.
+- Keep OTP verification secure and consistent with auth model.
+
+D) Sync OpenAPI with backend and clients (P1)
+- Add /auth/otp/verify to OpenAPI OR remove backend route if not needed.
+- Align OnboardingFlowResponse schema with actual response (includes status) or stop returning extra fields.
+- Regenerate api-client-react and api-zod from updated OpenAPI.
+- Remove frontend `any` casts where generated types should be used.
+
+E) Mobile onboarding happy-path (P1)
+- Add mobile onboarding flow screens/routes using:
+  - POST /onboarding/start
+  - POST /onboarding/step
+  - GET /onboarding/status
+- Gate tabs until onboarding is approved (or pending review page).
+
+F) Tests + CI truthfulness (P1)
+- Replace/augment synthetic tests with route-level integration tests (supertest + test DB/mock DB):
+  - step-order enforcement
+  - business redirect handling
+  - OTP-required transfer confirmation
+- Restore .github/workflows/ci.yml (linux) with typecheck + tests.
+- Ensure CI config actually exists in repo.
+
+G) Documentation integrity
+- Update docs/evidence-matrix.md to match real state.
+- Remove false claims (CI, SameSite, sql.raw removal, etc.).
+- Add a “Verified in this run” section with exact command outputs.
+
+Definition of Done (must include command output in final report):
+- pnpm run typecheck
+- pnpm --filter @workspace/api-server test
+- CI workflow file exists and references those checks
+- Web + mobile onboarding paths both functional for individual and business (at least happy-path)
+- No premature onboarding completion via REDIRECT_BUSINESS_FLOW

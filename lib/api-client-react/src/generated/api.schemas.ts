@@ -102,10 +102,32 @@ export const RequestOtpRequestPurpose = {
   step_up: "step_up",
   phone_verify: "phone_verify",
   password_reset: "password_reset",
+  payment_confirm: "payment_confirm",
 } as const;
 
 export interface RequestOtpRequest {
   purpose: RequestOtpRequestPurpose;
+}
+
+export type VerifyOtpRequestPurpose =
+  (typeof VerifyOtpRequestPurpose)[keyof typeof VerifyOtpRequestPurpose];
+
+export const VerifyOtpRequestPurpose = {
+  step_up: "step_up",
+  phone_verify: "phone_verify",
+  password_reset: "password_reset",
+  payment_confirm: "payment_confirm",
+  email_verify: "email_verify",
+} as const;
+
+export interface VerifyOtpRequest {
+  userId: string;
+  code: string;
+  purpose: VerifyOtpRequestPurpose;
+}
+
+export interface VerifyOtpResponse {
+  verified: boolean;
 }
 
 export type StartOnboardingRequestFlowType =
@@ -126,7 +148,7 @@ export type OnboardingFlowResponseFlowConfig = { [key: string]: unknown };
 export interface OnboardingFlowResponse {
   applicationId: string;
   currentStep: string;
-  status?: "in_progress" | "kyc_pending" | "approved" | "rejected";
+  status: "in_progress" | "kyc_pending" | "approved" | "rejected";
   flowConfig: OnboardingFlowResponseFlowConfig;
 }
 
@@ -148,10 +170,13 @@ export const OnboardingStepResponseStatus = {
   rejected: "rejected",
 } as const;
 
+export type OnboardingStepResponseFlowConfig = { [key: string]: unknown };
+
 export interface OnboardingStepResponse {
   stepId: string;
   nextStep: string;
   status: OnboardingStepResponseStatus;
+  flowConfig?: OnboardingStepResponseFlowConfig;
 }
 
 export type OnboardingStatusStatus =

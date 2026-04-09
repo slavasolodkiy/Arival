@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
-import { TransactionRow } from "@/components/TransactionRow";
+import { PaymentRow } from "@/components/PaymentRow";
 import { Skeleton } from "@/components/Skeleton";
 import {
   useGetAccounts,
@@ -374,7 +374,7 @@ export default function PaymentsScreen() {
           ) : (
             <View style={{ paddingHorizontal: 16 }}>
               {transfers.items.map((tx) => (
-                <TransactionRow key={tx.id} transaction={tx} />
+                <PaymentRow key={tx.id} payment={tx} />
               ))}
             </View>
           )}

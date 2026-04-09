@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { transactionsTable, paymentsTable, cardsTable, accountsTable } from "@workspace/db";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, inArray } from "drizzle-orm";
 import { authMiddleware, AuthenticatedRequest } from "../middlewares/auth";
 
 const router = Router();
@@ -43,7 +43,7 @@ router.get("/users/me/activity", authMiddleware, async (req: AuthenticatedReques
 
   if (accountIds.length > 0) {
     const txs = await db.select().from(transactionsTable)
-      .where(sql`${transactionsTable.accountId} = ANY(${sql.raw(`ARRAY['${accountIds.join("','")}']::uuid[]`)})`)
+      .where(inArray(transactionsTable.accountId, accountIds))
       .orderBy(desc(transactionsTable.createdAt))
       .limit(10);
 
