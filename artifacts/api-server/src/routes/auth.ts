@@ -5,12 +5,14 @@ import { eq, and, gt } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { RegisterBody, LoginBody, VerifyEmailBody, RequestOtpBody } from "@workspace/api-zod";
+import { authMiddleware, AuthenticatedRequest } from "../middlewares/auth";
 
 const router = Router();
 
-const JWT_SECRET = process.env.SESSION_SECRET || "nexvault-dev-secret-change-in-prod";
+const JWT_SECRET = process.env.SESSION_SECRET ?? "nexvault-dev-secret-change-in-prod";
 const ACCESS_TOKEN_TTL = "15m";
 const REFRESH_TOKEN_TTL = "30d";
+const DEMO_MODE = process.env.DEMO_MODE === "true" || process.env.NODE_ENV !== "production";
 
 function generateAccessToken(userId: string) {
   return jwt.sign({ userId, type: "access" }, JWT_SECRET, { expiresIn: ACCESS_TOKEN_TTL });
@@ -52,8 +54,9 @@ router.post("/auth/register", async (req, res) => {
     emailVerified: false,
   }).returning();
 
-  // In dev, auto-verify email
-  await db.update(usersTable).set({ emailVerified: true }).where(eq(usersTable.id, user.id));
+  if (DEMO_MODE) {
+    await db.update(usersTable).set({ emailVerified: true }).where(eq(usersTable.id, user.id));
+  }
 
   res.status(201).json({ userId: user.id, nextStep: "onboarding" });
 });
@@ -167,11 +170,65 @@ router.post("/auth/logout", async (req, res) => {
   res.json({ message: "Logged out" });
 });
 
-// POST /api/auth/otp/request
-router.post("/auth/otp/request", async (req, res) => {
-  // In a real app, send OTP via SMS/email
-  // For dev, just return success
-  res.json({ message: "OTP sent (dev: use code 123456)" });
+// POST /api/auth/otp/request  (requires auth)
+router.post("/auth/otp/request", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  const parsed = RequestOtpBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Validation failed" });
+    return;
+  }
+
+  const { purpose } = parsed.data;
+  const userId = req.userId!;
+
+  const code = DEMO_MODE ? "123456" : generateOtp();
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+  await db.insert(otpCodesTable).values({
+    userId,
+    code,
+    purpose,
+    expiresAt,
+    used: false,
+  });
+
+  res.json({
+    message: DEMO_MODE ? "OTP sent (demo: use code 123456)" : "OTP sent",
+    ...(DEMO_MODE ? { devCode: "123456" } : {}),
+  });
+});
+
+// POST /api/auth/otp/verify
+router.post("/auth/otp/verify", async (req, res) => {
+  const { userId, code, purpose } = req.body as {
+    userId?: string;
+    code?: string;
+    purpose?: string;
+  };
+
+  if (!userId || !code || !purpose) {
+    res.status(400).json({ error: "userId, code, and purpose required" });
+    return;
+  }
+
+  const [otpRecord] = await db.select().from(otpCodesTable)
+    .where(and(
+      eq(otpCodesTable.userId, userId),
+      eq(otpCodesTable.code, code),
+      eq(otpCodesTable.purpose, purpose as "payment_confirm" | "phone_verify" | "email_verify"),
+      eq(otpCodesTable.used, false),
+      gt(otpCodesTable.expiresAt, new Date())
+    ))
+    .limit(1);
+
+  if (!otpRecord) {
+    res.status(400).json({ error: "Invalid or expired OTP" });
+    return;
+  }
+
+  await db.update(otpCodesTable).set({ used: true }).where(eq(otpCodesTable.id, otpRecord.id));
+
+  res.json({ verified: true });
 });
 
 export default router;

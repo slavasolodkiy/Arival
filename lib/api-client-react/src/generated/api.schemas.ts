@@ -126,6 +126,7 @@ export type OnboardingFlowResponseFlowConfig = { [key: string]: unknown };
 export interface OnboardingFlowResponse {
   applicationId: string;
   currentStep: string;
+  status?: "in_progress" | "kyc_pending" | "approved" | "rejected";
   flowConfig: OnboardingFlowResponseFlowConfig;
 }
 

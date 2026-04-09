@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "1woRwF9SaNv3-sDBwkw_2"
+uri = "file://artifacts/nexvault-mobile/assets/images/icon.png"
+type = "image"
+title = "nexvault mobile app icon"

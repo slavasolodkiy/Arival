@@ -16,6 +16,11 @@ import type {
   UseQueryResult,
 } from "@tanstack/react-query";
 
+type PartialQO<T, E = unknown, TSelect = T> = Omit<
+  UseQueryOptions<T, E, TSelect>,
+  "queryKey"
+> & { queryKey?: QueryKey };
+
 import type {
   Account,
   AccountsSummary,
@@ -88,7 +93,7 @@ export const getHealthCheckQueryOptions = <
   TData = Awaited<ReturnType<typeof healthCheck>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<
+  query?: PartialQO<
     Awaited<ReturnType<typeof healthCheck>>,
     TError,
     TData
@@ -123,7 +128,7 @@ export function useHealthCheck<
   TData = Awaited<ReturnType<typeof healthCheck>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<
+  query?: PartialQO<
     Awaited<ReturnType<typeof healthCheck>>,
     TError,
     TData
@@ -841,7 +846,7 @@ export const getGetOnboardingStatusQueryOptions = <
   TData = Awaited<ReturnType<typeof getOnboardingStatus>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<
+  query?: PartialQO<
     Awaited<ReturnType<typeof getOnboardingStatus>>,
     TError,
     TData
@@ -876,7 +881,7 @@ export function useGetOnboardingStatus<
   TData = Awaited<ReturnType<typeof getOnboardingStatus>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<
+  query?: PartialQO<
     Awaited<ReturnType<typeof getOnboardingStatus>>,
     TError,
     TData
@@ -916,7 +921,7 @@ export const getGetAccountsQueryOptions = <
   TData = Awaited<ReturnType<typeof getAccounts>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<
+  query?: PartialQO<
     Awaited<ReturnType<typeof getAccounts>>,
     TError,
     TData
@@ -951,7 +956,7 @@ export function useGetAccounts<
   TData = Awaited<ReturnType<typeof getAccounts>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<
+  query?: PartialQO<
     Awaited<ReturnType<typeof getAccounts>>,
     TError,
     TData
@@ -1077,7 +1082,7 @@ export const getGetAccountsSummaryQueryOptions = <
   TData = Awaited<ReturnType<typeof getAccountsSummary>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<
+  query?: PartialQO<
     Awaited<ReturnType<typeof getAccountsSummary>>,
     TError,
     TData
@@ -1112,7 +1117,7 @@ export function useGetAccountsSummary<
   TData = Awaited<ReturnType<typeof getAccountsSummary>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<
+  query?: PartialQO<
     Awaited<ReturnType<typeof getAccountsSummary>>,
     TError,
     TData
@@ -1155,7 +1160,7 @@ export const getGetAccountQueryOptions = <
 >(
   id: string,
   options?: {
-    query?: UseQueryOptions<
+    query?: PartialQO<
       Awaited<ReturnType<typeof getAccount>>,
       TError,
       TData
@@ -1198,7 +1203,7 @@ export function useGetAccount<
 >(
   id: string,
   options?: {
-    query?: UseQueryOptions<
+    query?: PartialQO<
       Awaited<ReturnType<typeof getAccount>>,
       TError,
       TData
@@ -1268,7 +1273,7 @@ export const getGetAccountTransactionsQueryOptions = <
   id: string,
   params?: GetAccountTransactionsParams,
   options?: {
-    query?: UseQueryOptions<
+    query?: PartialQO<
       Awaited<ReturnType<typeof getAccountTransactions>>,
       TError,
       TData
@@ -1314,7 +1319,7 @@ export function useGetAccountTransactions<
   id: string,
   params?: GetAccountTransactionsParams,
   options?: {
-    query?: UseQueryOptions<
+    query?: PartialQO<
       Awaited<ReturnType<typeof getAccountTransactions>>,
       TError,
       TData
@@ -1357,7 +1362,7 @@ export const getGetCardsQueryOptions = <
   TData = Awaited<ReturnType<typeof getCards>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<Awaited<ReturnType<typeof getCards>>, TError, TData>;
+  query?: PartialQO<Awaited<ReturnType<typeof getCards>>, TError, TData>;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
@@ -1388,7 +1393,7 @@ export function useGetCards<
   TData = Awaited<ReturnType<typeof getCards>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<Awaited<ReturnType<typeof getCards>>, TError, TData>;
+  query?: PartialQO<Awaited<ReturnType<typeof getCards>>, TError, TData>;
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetCardsQueryOptions(options);
@@ -1513,7 +1518,7 @@ export const getGetCardQueryOptions = <
 >(
   id: string,
   options?: {
-    query?: UseQueryOptions<Awaited<ReturnType<typeof getCard>>, TError, TData>;
+    query?: PartialQO<Awaited<ReturnType<typeof getCard>>, TError, TData>;
     request?: SecondParameter<typeof customFetch>;
   },
 ) => {
@@ -1550,7 +1555,7 @@ export function useGetCard<
 >(
   id: string,
   options?: {
-    query?: UseQueryOptions<Awaited<ReturnType<typeof getCard>>, TError, TData>;
+    query?: PartialQO<Awaited<ReturnType<typeof getCard>>, TError, TData>;
     request?: SecondParameter<typeof customFetch>;
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
@@ -1755,7 +1760,7 @@ export const getGetBeneficiariesQueryOptions = <
   TData = Awaited<ReturnType<typeof getBeneficiaries>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<
+  query?: PartialQO<
     Awaited<ReturnType<typeof getBeneficiaries>>,
     TError,
     TData
@@ -1790,7 +1795,7 @@ export function useGetBeneficiaries<
   TData = Awaited<ReturnType<typeof getBeneficiaries>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<
+  query?: PartialQO<
     Awaited<ReturnType<typeof getBeneficiaries>>,
     TError,
     TData
@@ -1931,7 +1936,7 @@ export const getGetFxQuoteQueryOptions = <
 >(
   params: GetFxQuoteParams,
   options?: {
-    query?: UseQueryOptions<
+    query?: PartialQO<
       Awaited<ReturnType<typeof getFxQuote>>,
       TError,
       TData
@@ -1969,7 +1974,7 @@ export function useGetFxQuote<
 >(
   params: GetFxQuoteParams,
   options?: {
-    query?: UseQueryOptions<
+    query?: PartialQO<
       Awaited<ReturnType<typeof getFxQuote>>,
       TError,
       TData
@@ -2197,7 +2202,7 @@ export const getGetTransfersQueryOptions = <
 >(
   params?: GetTransfersParams,
   options?: {
-    query?: UseQueryOptions<
+    query?: PartialQO<
       Awaited<ReturnType<typeof getTransfers>>,
       TError,
       TData
@@ -2235,7 +2240,7 @@ export function useGetTransfers<
 >(
   params?: GetTransfersParams,
   options?: {
-    query?: UseQueryOptions<
+    query?: PartialQO<
       Awaited<ReturnType<typeof getTransfers>>,
       TError,
       TData
@@ -2293,7 +2298,7 @@ export const getGetNotificationsQueryOptions = <
 >(
   params?: GetNotificationsParams,
   options?: {
-    query?: UseQueryOptions<
+    query?: PartialQO<
       Awaited<ReturnType<typeof getNotifications>>,
       TError,
       TData
@@ -2332,7 +2337,7 @@ export function useGetNotifications<
 >(
   params?: GetNotificationsParams,
   options?: {
-    query?: UseQueryOptions<
+    query?: PartialQO<
       Awaited<ReturnType<typeof getNotifications>>,
       TError,
       TData
@@ -2452,7 +2457,7 @@ export const getGetMeQueryOptions = <
   TData = Awaited<ReturnType<typeof getMe>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>;
+  query?: PartialQO<Awaited<ReturnType<typeof getMe>>, TError, TData>;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
@@ -2481,7 +2486,7 @@ export function useGetMe<
   TData = Awaited<ReturnType<typeof getMe>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<Awaited<ReturnType<typeof getMe>>, TError, TData>;
+  query?: PartialQO<Awaited<ReturnType<typeof getMe>>, TError, TData>;
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetMeQueryOptions(options);
@@ -2517,7 +2522,7 @@ export const getGetRecentActivityQueryOptions = <
   TData = Awaited<ReturnType<typeof getRecentActivity>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<
+  query?: PartialQO<
     Awaited<ReturnType<typeof getRecentActivity>>,
     TError,
     TData
@@ -2552,7 +2557,7 @@ export function useGetRecentActivity<
   TData = Awaited<ReturnType<typeof getRecentActivity>>,
   TError = ErrorType<unknown>,
 >(options?: {
-  query?: UseQueryOptions<
+  query?: PartialQO<
     Awaited<ReturnType<typeof getRecentActivity>>,
     TError,
     TData

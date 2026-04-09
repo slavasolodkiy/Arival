@@ -10,6 +10,7 @@ Full-stack fintech platform (Nexvault) built as a pnpm monorepo. Inspired by mod
 artifacts/
   api-server/          Express 5 REST API (port 8080)
   nexvault-web/        React + Vite web app (port 23553 → external 3000)
+  nexvault-mobile/     Expo React Native mobile app (iOS/Android/web preview)
   mockup-sandbox/      UI sandbox (port 8081)
 
 lib/
@@ -40,7 +41,8 @@ docs/
 - **Validation**: Zod (v4), drizzle-zod
 - **API codegen**: Orval (OpenAPI → React Query hooks + Zod schemas)
 - **Frontend**: React 19, Vite, Tailwind CSS v4, shadcn/ui components, wouter router
-- **Build**: esbuild (API), Vite (web)
+- **Mobile**: Expo 52 (React Native), expo-router, AsyncStorage auth persistence, React Query
+- **Build**: esbuild (API), Vite (web), Expo (mobile)
 
 ## API Routes (all prefixed `/api`)
 
@@ -93,6 +95,17 @@ docs/
 - `/payments/history` — Transfer history
 - `/notifications` — Notification center
 - `/settings` — Profile, KYC status, sign out
+
+## Mobile App Screens (Expo)
+
+- **Home** — balance overview, recent activity, quick send shortcut
+- **Accounts** — multi-currency account list (USD/EUR/GBP) with balances
+- **Cards** — virtual/physical card management (freeze/unfreeze/create)
+- **Payments** — send money via beneficiaries, add new recipients (name + IBAN), OTP confirmation for large transfers
+- **Profile** — user info, KYC status badge, sign out
+
+Auth: JWT stored in AsyncStorage (`nexvault_token`). API base URL set via `EXPO_PUBLIC_DOMAIN` env var.
+Deep navy `#0B1426` + teal `#0AB3A0` design matches web app.
 
 ## Dev Notes
 

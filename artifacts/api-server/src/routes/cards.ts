@@ -73,9 +73,11 @@ router.post("/cards", authMiddleware, async (req: AuthenticatedRequest, res) => 
 
 // GET /api/cards/:id
 router.get("/cards/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  const id = String(req.params["id"]);
+
   const [card] = await db.select().from(cardsTable)
     .where(and(
-      eq(cardsTable.id, req.params.id),
+      eq(cardsTable.id, id),
       eq(cardsTable.userId, req.userId!)
     )).limit(1);
 
@@ -89,10 +91,12 @@ router.get("/cards/:id", authMiddleware, async (req: AuthenticatedRequest, res) 
 
 // PUT /api/cards/:id/freeze
 router.put("/cards/:id/freeze", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  const id = String(req.params["id"]);
+
   const [card] = await db.update(cardsTable)
     .set({ status: "frozen", updatedAt: new Date() })
     .where(and(
-      eq(cardsTable.id, req.params.id),
+      eq(cardsTable.id, id),
       eq(cardsTable.userId, req.userId!)
     ))
     .returning();
@@ -107,10 +111,12 @@ router.put("/cards/:id/freeze", authMiddleware, async (req: AuthenticatedRequest
 
 // PUT /api/cards/:id/unfreeze
 router.put("/cards/:id/unfreeze", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  const id = String(req.params["id"]);
+
   const [card] = await db.update(cardsTable)
     .set({ status: "active", updatedAt: new Date() })
     .where(and(
-      eq(cardsTable.id, req.params.id),
+      eq(cardsTable.id, id),
       eq(cardsTable.userId, req.userId!)
     ))
     .returning();

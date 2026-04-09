@@ -100,6 +100,7 @@ export const StartOnboardingBody = zod.object({
 export const StartOnboardingResponse = zod.object({
   applicationId: zod.string(),
   currentStep: zod.string(),
+  status: zod.enum(["in_progress", "kyc_pending", "approved", "rejected"]).optional(),
   flowConfig: zod.record(zod.string(), zod.unknown()),
 });
 

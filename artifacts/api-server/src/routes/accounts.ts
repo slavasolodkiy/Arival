@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { accountsTable, transactionsTable } from "@workspace/db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, inArray } from "drizzle-orm";
 import { authMiddleware, AuthenticatedRequest } from "../middlewares/auth";
 import { CreateAccountBody, GetAccountTransactionsQueryParams } from "@workspace/api-zod";
 
@@ -60,7 +60,6 @@ router.post("/accounts", authMiddleware, async (req: AuthenticatedRequest, res) 
 
   const { currency } = parsed.data;
 
-  // Generate fake IBAN
   const ibanSuffix = Math.random().toString(36).substring(2, 18).toUpperCase();
   const iban = `GB${Math.floor(10 + Math.random() * 90)}NEXV0001${ibanSuffix}`;
 
@@ -83,28 +82,21 @@ router.get("/accounts/summary", authMiddleware, async (req: AuthenticatedRequest
   const accounts = await db.select().from(accountsTable)
     .where(eq(accountsTable.userId, req.userId!));
 
-  // Get recent transactions for all accounts
   const accountIds = accounts.map(a => a.id);
   let recentTransactions: ReturnType<typeof formatTransaction>[] = [];
 
   if (accountIds.length > 0) {
     const txs = await db.select().from(transactionsTable)
-      .where(sql`${transactionsTable.accountId} = ANY(${sql.raw(`ARRAY['${accountIds.join("','")}']::uuid[]`)})`)
+      .where(inArray(transactionsTable.accountId, accountIds))
       .orderBy(desc(transactionsTable.createdAt))
       .limit(10);
     recentTransactions = txs.map(formatTransaction);
   }
 
-  // Compute total balance in USD (simplified - use 1:1 for demo)
   const fxRates: Record<string, number> = { USD: 1, EUR: 1.08, GBP: 1.27, SGD: 0.74, AED: 0.27 };
   const totalBalanceUsd = accounts.reduce((sum, acc) => {
-    return sum + Number(acc.balance) * (fxRates[acc.currency] || 1);
+    return sum + Number(acc.balance) * (fxRates[acc.currency] ?? 1);
   }, 0);
-
-  // Calculate monthly spend / income from transactions (simplified)
-  const monthStart = new Date();
-  monthStart.setDate(1);
-  monthStart.setHours(0, 0, 0, 0);
 
   res.json({
     totalBalanceUsd,
@@ -118,9 +110,11 @@ router.get("/accounts/summary", authMiddleware, async (req: AuthenticatedRequest
 
 // GET /api/accounts/:id
 router.get("/accounts/:id", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  const id = String(req.params["id"]);
+
   const [account] = await db.select().from(accountsTable)
     .where(and(
-      eq(accountsTable.id, req.params.id),
+      eq(accountsTable.id, id),
       eq(accountsTable.userId, req.userId!)
     )).limit(1);
 
@@ -134,18 +128,20 @@ router.get("/accounts/:id", authMiddleware, async (req: AuthenticatedRequest, re
 
 // GET /api/accounts/:id/transactions
 router.get("/accounts/:id/transactions", authMiddleware, async (req: AuthenticatedRequest, res) => {
+  const id = String(req.params["id"]);
+
   const queryParsed = GetAccountTransactionsQueryParams.safeParse({
     limit: req.query.limit ? Number(req.query.limit) : undefined,
     offset: req.query.offset ? Number(req.query.offset) : undefined,
     type: req.query.type,
   });
 
-  const limit = queryParsed.success ? (queryParsed.data.limit ?? 50) : 50;
-  const offset = queryParsed.success ? (queryParsed.data.offset ?? 0) : 0;
+  const limit = Math.min(queryParsed.success ? (queryParsed.data.limit ?? 50) : 50, 200);
+  const offset = Math.max(queryParsed.success ? (queryParsed.data.offset ?? 0) : 0, 0);
 
   const [account] = await db.select().from(accountsTable)
     .where(and(
-      eq(accountsTable.id, req.params.id),
+      eq(accountsTable.id, id),
       eq(accountsTable.userId, req.userId!)
     )).limit(1);
 
@@ -155,14 +151,14 @@ router.get("/accounts/:id/transactions", authMiddleware, async (req: Authenticat
   }
 
   const txs = await db.select().from(transactionsTable)
-    .where(eq(transactionsTable.accountId, req.params.id))
+    .where(eq(transactionsTable.accountId, id))
     .orderBy(desc(transactionsTable.createdAt))
     .limit(limit)
     .offset(offset);
 
   const [{ count }] = await db.select({ count: sql<number>`count(*)` })
     .from(transactionsTable)
-    .where(eq(transactionsTable.accountId, req.params.id));
+    .where(eq(transactionsTable.accountId, id));
 
   res.json({
     items: txs.map(formatTransaction),

@@ -9,33 +9,40 @@ import businessFlow from "../../../../config/onboarding/business-flow.json" asse
 
 const router = Router();
 
-const FLOW_CONFIGS: Record<string, typeof individualFlow | typeof businessFlow> = {
+const DEMO_MODE = process.env.DEMO_MODE === "true" || process.env.NODE_ENV !== "production";
+
+type FlowConfig = typeof individualFlow | typeof businessFlow;
+
+const FLOW_CONFIGS: Record<string, FlowConfig> = {
   individual: individualFlow,
   business: businessFlow,
 };
+
+const TERMINAL_SIGNALS = new Set(["SUBMIT_KYC", "SUBMIT", "REDIRECT_BUSINESS_FLOW"]);
 
 // POST /api/onboarding/start
 router.post("/onboarding/start", authMiddleware, async (req: AuthenticatedRequest, res) => {
   const parsed = StartOnboardingBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: "Validation failed" });
+    res.status(400).json({ error: "Validation failed", issues: parsed.error.issues });
     return;
   }
 
   const { flowType, countryCode } = parsed.data;
 
-  // Check existing application
   const [existing] = await db.select().from(onboardingApplicationsTable)
     .where(eq(onboardingApplicationsTable.userId, req.userId!))
     .limit(1);
 
   if (existing) {
     const flowConfig = FLOW_CONFIGS[existing.flowType];
-    return res.json({
+    res.json({
       applicationId: existing.id,
       currentStep: existing.currentStep,
+      status: existing.status,
       flowConfig,
     });
+    return;
   }
 
   const flowConfig = FLOW_CONFIGS[flowType];
@@ -57,6 +64,7 @@ router.post("/onboarding/start", authMiddleware, async (req: AuthenticatedReques
   res.json({
     applicationId: application.id,
     currentStep: application.currentStep,
+    status: application.status,
     flowConfig,
   });
 });
@@ -65,7 +73,7 @@ router.post("/onboarding/start", authMiddleware, async (req: AuthenticatedReques
 router.post("/onboarding/step", authMiddleware, async (req: AuthenticatedRequest, res) => {
   const parsed = SubmitOnboardingStepBody.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: "Validation failed" });
+    res.status(400).json({ error: "Validation failed", issues: parsed.error.issues });
     return;
   }
 
@@ -80,7 +88,27 @@ router.post("/onboarding/step", authMiddleware, async (req: AuthenticatedRequest
     return;
   }
 
+  if (application.status === "approved" || application.status === "rejected") {
+    res.status(409).json({ error: `Application is already ${application.status}` });
+    return;
+  }
+
+  // Strict state machine: only the current step may be submitted
+  if (application.currentStep !== stepId) {
+    res.status(400).json({
+      error: "Step out of order",
+      expected: application.currentStep,
+      received: stepId,
+    });
+    return;
+  }
+
   const flowConfig = FLOW_CONFIGS[application.flowType];
+  if (!flowConfig) {
+    res.status(500).json({ error: "Flow config not found" });
+    return;
+  }
+
   const stepIndex = flowConfig.steps.findIndex(s => s.id === stepId);
   const step = flowConfig.steps[stepIndex];
 
@@ -89,12 +117,11 @@ router.post("/onboarding/step", authMiddleware, async (req: AuthenticatedRequest
     return;
   }
 
-  const completedSteps = Array.isArray(application.completedSteps)
-    ? [...(application.completedSteps as string[]), stepId]
-    : [stepId];
-
-  // Determine next step
-  let nextStep = "step" in step && step.nextStep ? step.nextStep : flowConfig.steps[stepIndex + 1]?.id ?? "SUBMIT_KYC";
+  // Determine next step from config
+  let nextStep: string = flowConfig.steps[stepIndex + 1]?.id ?? "SUBMIT_KYC";
+  if ("nextStep" in step && step.nextStep) {
+    nextStep = step.nextStep as string;
+  }
 
   // Handle branching
   if ("branching" in step && step.branching) {
@@ -111,66 +138,74 @@ router.post("/onboarding/step", authMiddleware, async (req: AuthenticatedRequest
     }
   }
 
+  const completedSteps = Array.isArray(application.completedSteps)
+    ? [...(application.completedSteps as string[]), stepId]
+    : [stepId];
+
   let status: "in_progress" | "kyc_pending" | "approved" | "rejected" = "in_progress";
 
-  if (nextStep === "SUBMIT_KYC" || nextStep === "SUBMIT") {
-    // Auto-approve in dev
-    status = "approved";
-    nextStep = "complete";
+  if (TERMINAL_SIGNALS.has(nextStep)) {
+    if (DEMO_MODE) {
+      // Auto-approve in demo mode
+      status = "approved";
+      nextStep = "complete";
 
-    // Update user KYC status
-    await db.update(usersTable)
-      .set({ kycStatus: "approved" })
-      .where(eq(usersTable.id, req.userId!));
+      await db.update(usersTable)
+        .set({ kycStatus: "approved" })
+        .where(eq(usersTable.id, req.userId!));
 
-    // Provision accounts if not existing
-    const existingAccounts = await db.select().from(accountsTable)
-      .where(eq(accountsTable.userId, req.userId!));
+      const existingAccounts = await db.select().from(accountsTable)
+        .where(eq(accountsTable.userId, req.userId!));
 
-    if (existingAccounts.length === 0) {
-      const ibanSuffix = Math.random().toString(36).substring(2, 18).toUpperCase();
+      if (existingAccounts.length === 0) {
+        const suffix = () => Math.random().toString(36).substring(2, 18).toUpperCase();
+        const rnd2 = () => Math.floor(10 + Math.random() * 90).toString();
 
-      await db.insert(accountsTable).values([
-        {
-          userId: req.userId!,
-          currency: "USD",
-          iban: `US${Math.floor(10 + Math.random() * 90)}NEXV0001${ibanSuffix}`,
-          accountNumber: Math.floor(10000000 + Math.random() * 90000000).toString(),
-          sortCode: "04-00-04",
-          balance: "12500.00",
-          availableBalance: "12500.00",
-          status: "active",
-        },
-        {
-          userId: req.userId!,
-          currency: "EUR",
-          iban: `DE${Math.floor(10 + Math.random() * 90)}NEXV0001${Math.random().toString(36).substring(2, 18).toUpperCase()}`,
-          accountNumber: Math.floor(10000000 + Math.random() * 90000000).toString(),
-          balance: "8200.00",
-          availableBalance: "8200.00",
-          status: "active",
-        },
-        {
-          userId: req.userId!,
-          currency: "GBP",
-          iban: `GB${Math.floor(10 + Math.random() * 90)}NEXV04000412345678`,
-          accountNumber: "12345678",
-          sortCode: "04-00-04",
-          balance: "3750.50",
-          availableBalance: "3750.50",
-          status: "active",
-        },
-      ]);
+        await db.insert(accountsTable).values([
+          {
+            userId: req.userId!,
+            currency: "USD",
+            iban: `US${rnd2()}NEXV0001${suffix()}`,
+            accountNumber: Math.floor(10000000 + Math.random() * 90000000).toString(),
+            sortCode: "04-00-04",
+            balance: "12500.00",
+            availableBalance: "12500.00",
+            status: "active",
+          },
+          {
+            userId: req.userId!,
+            currency: "EUR",
+            iban: `DE${rnd2()}NEXV0001${suffix()}`,
+            accountNumber: Math.floor(10000000 + Math.random() * 90000000).toString(),
+            balance: "8200.00",
+            availableBalance: "8200.00",
+            status: "active",
+          },
+          {
+            userId: req.userId!,
+            currency: "GBP",
+            iban: `GB${rnd2()}NEXV0001${suffix()}`,
+            accountNumber: Math.floor(10000000 + Math.random() * 90000000).toString(),
+            sortCode: "04-00-04",
+            balance: "3750.50",
+            availableBalance: "3750.50",
+            status: "active",
+          },
+        ]);
+      }
+
+      await db.insert(notificationsTable).values({
+        userId: req.userId!,
+        type: "kyc",
+        title: "Account Verified",
+        body: "Your identity has been verified. Your Nexvault accounts are now ready.",
+        read: false,
+      });
+    } else {
+      // In production, move to KYC review queue
+      status = "kyc_pending";
+      nextStep = "kyc_review";
     }
-
-    // Create welcome notification
-    await db.insert(notificationsTable).values({
-      userId: req.userId!,
-      type: "kyc",
-      title: "Account Verified",
-      body: "Your identity has been verified. Your Nexvault accounts are now ready.",
-      read: false,
-    });
   }
 
   // Merge step data

@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/nexvault-mobile/"
+title = "Nexvault Mobile"
+version = "1.0.0"
+id = "artifacts/nexvault-mobile"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/nexvault-mobile/" ]
+localPort = 19860
+
+[services.development]
+run = "pnpm --filter @workspace/nexvault-mobile run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/nexvault-mobile", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/nexvault-mobile", "run", "serve" ]
+
+[services.env]
+PORT = "19860"
+BASE_PATH = "/nexvault-mobile/"

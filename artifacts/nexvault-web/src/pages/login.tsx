@@ -18,7 +18,12 @@ export default function Login() {
     mutation: {
       onSuccess: (data) => {
         setToken(data.accessToken);
-        setLocation("/dashboard");
+        const kycStatus = data.user?.kycStatus;
+        if (kycStatus === "pending" || kycStatus === "in_progress") {
+          setLocation("/onboarding");
+        } else {
+          setLocation("/dashboard");
+        }
       },
       onError: (error: any) => {
         toast({

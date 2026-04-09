@@ -1,18 +1,20 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { beneficiariesTable, paymentsTable, accountsTable, transactionsTable } from "@workspace/db";
-import { eq, and, desc } from "drizzle-orm";
+import { beneficiariesTable, paymentsTable, accountsTable, transactionsTable, otpCodesTable } from "@workspace/db";
+import { eq, and, desc, gt } from "drizzle-orm";
 import { authMiddleware, AuthenticatedRequest } from "../middlewares/auth";
 import {
   CreateBeneficiaryBody,
   GetFxQuoteQueryParams,
   InitiateTransferBody,
-  ConfirmTransferBody
+  ConfirmTransferBody,
 } from "@workspace/api-zod";
 
 const router = Router();
 
-// FX rates (simplified demo)
+const DEMO_MODE = process.env.DEMO_MODE === "true" || process.env.NODE_ENV !== "production";
+const OTP_REQUIRED_THRESHOLD = 500;
+
 const FX_RATES: Record<string, Record<string, number>> = {
   USD: { USD: 1, EUR: 0.925, GBP: 0.787, SGD: 1.35, AED: 3.67 },
   EUR: { USD: 1.08, EUR: 1, GBP: 0.851, SGD: 1.46, AED: 3.97 },
@@ -36,7 +38,6 @@ function formatBeneficiary(b: typeof beneficiariesTable.$inferSelect) {
   };
 }
 
-// Pending transfers (in-memory for demo)
 const pendingTransfers = new Map<string, {
   fromAccountId: string;
   beneficiaryId: string;
@@ -48,7 +49,17 @@ const pendingTransfers = new Map<string, {
   fee: number;
   reference?: string;
   userId: string;
+  requiresOtp: boolean;
+  expiresAt: Date;
 }>();
+
+// Periodically evict expired pending transfers (every 5 min)
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, transfer] of pendingTransfers.entries()) {
+    if (transfer.expiresAt.getTime() < now) pendingTransfers.delete(id);
+  }
+}, 5 * 60 * 1000);
 
 // GET /api/payments/beneficiaries
 router.get("/payments/beneficiaries", authMiddleware, async (req: AuthenticatedRequest, res) => {
@@ -90,7 +101,7 @@ router.get("/payments/fx/quote", authMiddleware, async (req: AuthenticatedReques
 
   const { from, to, amount } = parsed.data;
   const rate = FX_RATES[from]?.[to] ?? 1;
-  const fee = amount * 0.005; // 0.5% fee
+  const fee = amount * 0.005;
   const convertedAmount = (amount - fee) * rate;
   const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
 
@@ -146,8 +157,11 @@ router.post("/payments/transfer/initiate", authMiddleware, async (req: Authentic
   const rate = FX_RATES[currency]?.[beneficiary.currency] ?? 1;
   const fee = amount * 0.005;
   const destinationAmount = (amount - fee) * rate;
+  const requiresOtp = amount >= OTP_REQUIRED_THRESHOLD;
 
-  const transferId = `txfr_${Date.now()}`;
+  const transferId = `txfr_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
   pendingTransfers.set(transferId, {
     fromAccountId,
     beneficiaryId,
@@ -159,13 +173,29 @@ router.post("/payments/transfer/initiate", authMiddleware, async (req: Authentic
     fee: Math.round(fee * 100) / 100,
     reference,
     userId: req.userId!,
+    requiresOtp,
+    expiresAt,
   });
+
+  if (requiresOtp) {
+    const code = DEMO_MODE ? "123456" : Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await db.insert(otpCodesTable).values({
+      userId: req.userId!,
+      code,
+      purpose: "payment_confirm",
+      expiresAt: otpExpiresAt,
+      used: false,
+    });
+  }
 
   res.json({
     transferId,
-    requiresOtp: false,
+    requiresOtp,
     fee: Math.round(fee * 100) / 100,
     estimatedArrival: "1-2 business days",
+    ...(requiresOtp && DEMO_MODE ? { devOtp: "123456" } : {}),
   });
 });
 
@@ -177,7 +207,7 @@ router.post("/payments/transfer/confirm", authMiddleware, async (req: Authentica
     return;
   }
 
-  const { transferId } = parsed.data;
+  const { transferId, otpCode } = parsed.data;
   const pending = pendingTransfers.get(transferId);
 
   if (!pending || pending.userId !== req.userId) {
@@ -185,10 +215,33 @@ router.post("/payments/transfer/confirm", authMiddleware, async (req: Authentica
     return;
   }
 
-  // Execute the transfer
+  if (pending.expiresAt < new Date()) {
+    pendingTransfers.delete(transferId);
+    res.status(410).json({ error: "Transfer expired, please initiate again" });
+    return;
+  }
+
+  if (pending.requiresOtp) {
+    const [otpRecord] = await db.select().from(otpCodesTable)
+      .where(and(
+        eq(otpCodesTable.userId, req.userId!),
+        eq(otpCodesTable.code, otpCode),
+        eq(otpCodesTable.purpose, "payment_confirm"),
+        eq(otpCodesTable.used, false),
+        gt(otpCodesTable.expiresAt, new Date())
+      ))
+      .limit(1);
+
+    if (!otpRecord) {
+      res.status(400).json({ error: "Invalid or expired OTP" });
+      return;
+    }
+
+    await db.update(otpCodesTable).set({ used: true }).where(eq(otpCodesTable.id, otpRecord.id));
+  }
+
   pendingTransfers.delete(transferId);
 
-  // Deduct from account
   const [account] = await db.select().from(accountsTable)
     .where(eq(accountsTable.id, pending.fromAccountId)).limit(1);
 
@@ -197,12 +250,11 @@ router.post("/payments/transfer/confirm", authMiddleware, async (req: Authentica
     .set({
       balance: newBalance.toFixed(2),
       availableBalance: newBalance.toFixed(2),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     })
     .where(eq(accountsTable.id, pending.fromAccountId));
 
-  // Record transaction
-  const [tx] = await db.insert(transactionsTable).values({
+  await db.insert(transactionsTable).values({
     accountId: pending.fromAccountId,
     type: "debit",
     category: pending.currency !== pending.destinationCurrency ? "fx" : "transfer",
@@ -211,9 +263,8 @@ router.post("/payments/transfer/confirm", authMiddleware, async (req: Authentica
     description: `Transfer to beneficiary`,
     reference: pending.reference,
     status: "completed",
-  }).returning();
+  });
 
-  // Record payment
   const [payment] = await db.insert(paymentsTable).values({
     userId: req.userId!,
     fromAccountId: pending.fromAccountId,
@@ -250,8 +301,8 @@ router.post("/payments/transfer/confirm", authMiddleware, async (req: Authentica
 
 // GET /api/payments/transfers
 router.get("/payments/transfers", authMiddleware, async (req: AuthenticatedRequest, res) => {
-  const limit = Number(req.query.limit) || 20;
-  const offset = Number(req.query.offset) || 0;
+  const limit = Math.min(Number(req.query.limit) || 20, 100);
+  const offset = Math.max(Number(req.query.offset) || 0, 0);
 
   const payments = await db.select().from(paymentsTable)
     .where(eq(paymentsTable.userId, req.userId!))
