@@ -1,6 +1,7 @@
 # Nexvault — Evidence Matrix
 
-> Last updated: 2026-04-09
+> Last updated: 2026-04-09  
+> Rev: DEMO_MODE/cookie/TS/CI fixes applied
 
 This document maps every platform capability to its implementation artifacts, test evidence, and open gaps.
 
@@ -19,7 +20,7 @@ This document maps every platform capability to its implementation artifacts, te
 | OTP for high-value payments | ✅ Done | Transfers ≥ $500 require OTP; stored in `otp_codes` table with expiry | `payments.ts` confirm route |
 | OTP demo code | ✅ Done | In demo mode, OTP always "123456"; `devOtp` returned in response | `auth.ts` OTP generation |
 | OTP verify endpoint | ✅ Done | `POST /api/auth/otp/verify` — validates code, marks used | `auth.ts` + OpenAPI spec synced |
-| DEMO_MODE strict flag | ✅ Done | Only `process.env.DEMO_MODE === "true"` — no NODE_ENV fallback | `onboarding.ts`, `auth.ts` |
+| DEMO_MODE strict flag | ✅ Done | Only `process.env.DEMO_MODE === "true"` — no NODE_ENV fallback (fix: removed `|| process.env.NODE_ENV !== "production"` from `auth.ts` and `payments.ts`) | `onboarding.ts`, `auth.ts`, `payments.ts` |
 
 ---
 
@@ -90,8 +91,8 @@ This document maps every platform capability to its implementation artifacts, te
 | CORS allowlist | ✅ Done | `ALLOWED_ORIGINS` env var; dev allows all | `api-server/src/app.ts` |
 | Parameterised SQL | ✅ Done | Drizzle ORM — no raw interpolation; `inArray()` replacing `sql.raw` | P0 security fix |
 | JWT secret rotation | ✅ Done | `SESSION_SECRET` env var (Replit secret) | `auth.ts` |
-| Refresh token httpOnly cookie | ✅ Done | SameSite=Strict, Secure in production | `auth.ts` |
-| OTP expiry (5 min) | ✅ Done | `expiresAt` stored, validated server-side | `otp_codes` table |
+| Refresh token httpOnly cookie | ✅ Done | SameSite=Lax, Secure in production | `auth.ts` |
+| OTP expiry (10 min) | ✅ Done | `expiresAt = Date.now() + 10 * 60 * 1000`, validated server-side | `otp_codes` table |
 | Rate limiting | ⚠️ Partial | Not yet implemented for OTP/auth routes | Backlog |
 | 2FA (TOTP) | ❌ Not started | Backlog | Backlog |
 | AML screening | ❌ Not started | Backlog — would integrate Comply Advantage | Backlog |
@@ -102,7 +103,7 @@ This document maps every platform capability to its implementation artifacts, te
 
 | Capability | Status | Implementation | Evidence |
 |---|---|---|---|
-| TypeScript strict mode | ✅ Done | All 9 packages build clean (`tsc --noEmit`) | Full workspace typecheck: 0 errors |
+| TypeScript strict mode | ✅ Done | All packages build clean after fixing Slot type cast (button-group.tsx), rootRef cast (calendar.tsx), LucideProps (spinner.tsx) | Workspace typecheck: 0 errors |
 | OpenAPI spec | ✅ Done | `lib/api-spec/openapi.yaml` | Manually maintained (codegen broken) |
 | `/auth/otp/verify` in spec | ✅ Done | Added endpoint + `VerifyOtp` request/response types | P1 OpenAPI sync |
 | `payment_confirm` OTP purpose | ✅ Done | Added to purpose enum in spec + Zod schemas | P1 OpenAPI sync |
@@ -110,8 +111,8 @@ This document maps every platform capability to its implementation artifacts, te
 | Generated Zod schemas | ✅ Done | `lib/api-zod/src/generated/api.ts` — `VerifyOtp` types added | Manually patched |
 | Drizzle ORM migrations | ✅ Done | `lib/db/src/schema.ts` | `drizzle-kit push` |
 | Config-driven onboarding | ✅ Done | JSON flow configs, not hardcoded | `config/onboarding/` |
-| DEMO_MODE flag | ✅ Done | Auto-approves KYC, returns dev OTP; only `==="true"` check | `api-server` env |
-| GitHub Actions CI | ✅ Done | `.github/workflows/ci.yml` — typecheck + unit + integration tests | Phase E |
+| DEMO_MODE flag | ✅ Done | Auto-approves KYC, returns dev OTP; only `==="true"` check — fixed `auth.ts` + `payments.ts` to remove `NODE_ENV` fallback | `api-server` env |
+| GitHub Actions CI | ✅ Done | `.github/workflows/ci.yml` — typecheck + vitest run on ubuntu-latest | Created in this PR |
 | Unit tests (Vitest) | ✅ Done | Auth hashing, OTP lifecycle, payment threshold | `artifacts/api-server/src/__tests__/` |
 | Route-level integration tests | ✅ Done | 39 tests passing — auth guards, schema validation, step-order, OTP confirm | `src/__tests__/routes.integration.test.ts` |
 | `TERMINAL_SIGNALS` exported | ✅ Done | `export const TERMINAL_SIGNALS` — directly testable | Integration test verifies `REDIRECT_BUSINESS_FLOW` absent |
